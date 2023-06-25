@@ -24,7 +24,7 @@ style:
 	black $(WORKDIR)
 	isort $(WORKDIR)
 	flake8 --toml-config=$(WORKDIR)/pyproject.toml $(WORKDIR)
-	mypy $(WORKDIR)
+	mypy --config-file=$(WORKDIR)/pyproject.toml $(WORKDIR)
 	pymarkdown scan .
 
 test:

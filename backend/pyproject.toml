@@ -36,7 +36,7 @@ line-length = 79
 skip-string-normalization = "true"
 
 [tool.django-stubs]
-django_settings_module = "backend.settings"
+django_settings_module = "foodgram.settings"
 
 [tool.flake8]
 ignore = [
@@ -75,12 +75,12 @@ warn_redundant_casts = true
 warn_unused_configs = true
 warn_unreachable = true
 warn_no_return = true
-mypy_path = "backend"
+mypy_path = "backend/foodgram"
 disable_error_code = ["var-annotated", "attr-defined"]
 
 [tool.pytest.ini_options]
 pythonpath = "backend/"
-DJANGO_SETTINGS_MODULE = "backend.settings"
+DJANGO_SETTINGS_MODULE = "foodgram.settings"
 norecursedirs = ["venv/*"]
 addopts = "-vv -p no:cacheprovider"
 testpaths = ["tests/"]
