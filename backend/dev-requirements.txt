@@ -60,6 +60,8 @@ packaging==23.1
     #   pytest
 pathspec==0.11.1
     # via black
+pillow==9.5.0
+    # via foodgram (backend/pyproject.toml)
 platformdirs==3.8.0
     # via black
 pluggy==1.2.0
