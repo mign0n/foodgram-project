@@ -6,17 +6,66 @@
 #
 asgiref==3.7.2
     # via django
+certifi==2023.5.7
+    # via requests
+cffi==1.15.1
+    # via cryptography
+charset-normalizer==3.1.0
+    # via requests
+cryptography==41.0.1
+    # via social-auth-core
+defusedxml==0.7.1
+    # via
+    #   python3-openid
+    #   social-auth-core
 django==4.2.2
     # via
     #   djangorestframework
+    #   djangorestframework-simplejwt
+    #   djoser
     #   foodgram (backend/pyproject.toml)
+    #   social-auth-app-django
+django-templated-mail==1.1.1
+    # via djoser
 djangorestframework==3.14.0
+    # via
+    #   djangorestframework-simplejwt
+    #   foodgram (backend/pyproject.toml)
+djangorestframework-simplejwt==5.2.2
+    # via djoser
+djoser==2.2.0
     # via foodgram (backend/pyproject.toml)
+idna==3.4
+    # via requests
+oauthlib==3.2.2
+    # via
+    #   requests-oauthlib
+    #   social-auth-core
 pillow==9.5.0
     # via foodgram (backend/pyproject.toml)
+pycparser==2.21
+    # via cffi
+pyjwt==2.7.0
+    # via
+    #   djangorestframework-simplejwt
+    #   social-auth-core
+python3-openid==3.2.0
+    # via social-auth-core
 pytz==2023.3
     # via djangorestframework
+requests==2.31.0
+    # via
+    #   requests-oauthlib
+    #   social-auth-core
+requests-oauthlib==1.3.1
+    # via social-auth-core
+social-auth-app-django==5.2.0
+    # via djoser
+social-auth-core==4.4.2
+    # via social-auth-app-django
 sqlparse==0.4.4
     # via django
 typing-extensions==4.6.3
     # via asgiref
+urllib3==2.0.3
+    # via requests
