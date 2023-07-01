@@ -84,6 +84,8 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 REST_FRAMEWORK = {
+    'DEFAULT_PAGINATION_CLASS': 'api.paginators.ResultsSetPagination',
+    'PAGE_SIZE': 100,
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
     ],
@@ -94,6 +96,16 @@ REST_FRAMEWORK = {
 
 DJOSER = {
     'LOGIN_FIELD': 'email',
+    'HIDE_USERS': False,
+    'SERIALIZERS': {
+        'user': 'api.serializers.UsersSerializer',
+        'current_user': 'api.serializers.UsersSerializer',
+        'user_create': 'api.serializers.UserCreateSerializer',
+    },
+    'PERMISSIONS': {
+        'user': ['rest_framework.permissions.IsAuthenticated'],
+        'user_list': ['rest_framework.permissions.IsAuthenticatedOrReadOnly'],
+    },
 }
 
 LANGUAGE_CODE = 'ru'

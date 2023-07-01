@@ -1,3 +1,6 @@
-from django.shortcuts import render
+from djoser.views import UserViewSet as UserBaseViewSet
+from recipes.models import User
 
-# Create your views here.
+
+class UserViewSet(UserBaseViewSet):
+    queryset = User.objects.all().order_by('date_joined')
