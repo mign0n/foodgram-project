@@ -42,6 +42,7 @@ class RecipeAdmin(admin.ModelAdmin):
         'name',
         'author',
         'favorite_count',
+        'in_shopping_cart_count',
     )
     list_filter = (
         'author',

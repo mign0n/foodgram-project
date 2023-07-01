@@ -1,6 +1,6 @@
 from api import serializers
 from djoser.views import UserViewSet as UserBaseViewSet
-from recipes.models import Tag, User
+from recipes.models import Recipe, Tag, User
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 
@@ -14,3 +14,9 @@ class TagViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticatedOrReadOnly]
     queryset = Tag.objects.all().order_by('id')
     serializer_class = serializers.TagSerializer
+
+
+class RecipeViewSet(viewsets.ModelViewSet):
+    permission_classes = [IsAuthenticatedOrReadOnly]
+    queryset = Recipe.objects.all().order_by('-pub_date')
+    serializer_class = serializers.RecipeSerializer

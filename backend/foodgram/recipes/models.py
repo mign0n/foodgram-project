@@ -70,6 +70,7 @@ class Recipe(models.Model):
     tags = models.ManyToManyField(Tag, verbose_name='список меток')
     text = models.TextField(verbose_name='описание рецепта')
     favorite_count = models.IntegerField(default=0, blank=True)
+    in_shopping_cart_count = models.IntegerField(default=0, blank=True)
 
     class Meta:
         ordering = ('-pub_date',)
@@ -134,20 +135,6 @@ class Favorite(models.Model):
         )
 
 
-@receiver(
-    [
-        models.signals.post_save,
-        models.signals.post_delete,
-    ],
-    sender=Favorite,
-)
-def update_count(instance: Favorite, **kwargs) -> None:
-    del kwargs
-    Recipe.objects.filter(
-        pk=instance.recipe.pk,
-    ).update(favorite_count=instance.count_favorite())
-
-
 class Cart(models.Model):
     owner = models.ForeignKey(
         User,
@@ -162,6 +149,16 @@ class Cart(models.Model):
 
     class Meta:
         default_related_name = '%(class)s'
+
+    def count_recipes(self) -> int:
+        return (
+            Cart.objects.select_related(
+                'owner',
+                'recipe',
+            )
+            .filter(recipe__pk=self.recipe.pk)
+            .count()
+        )
 
     def __str__(self) -> str:
         return (
@@ -188,3 +185,31 @@ class Subscribe(models.Model):
 
     def __str__(self) -> str:
         return f'{self.user} подписан на {self.author}'
+
+
+@receiver(
+    [
+        models.signals.post_save,
+        models.signals.post_delete,
+    ],
+    sender=Favorite,
+)
+def update_favorite_count(instance: Favorite, **kwargs) -> None:
+    del kwargs
+    Recipe.objects.filter(
+        pk=instance.recipe.pk,
+    ).update(favorite_count=instance.count_favorite())
+
+
+@receiver(
+    [
+        models.signals.post_save,
+        models.signals.post_delete,
+    ],
+    sender=Cart,
+)
+def update_in_cart_count(instance: Cart, **kwargs) -> None:
+    del kwargs
+    Recipe.objects.filter(
+        pk=instance.recipe.pk,
+    ).update(in_shopping_cart_count=instance.count_recipes())
