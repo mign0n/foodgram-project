@@ -23,17 +23,17 @@ class Ingredient(models.Model):
 class Tag(models.Model):
     name = models.CharField(
         verbose_name='метка',
-        max_length=50,
+        max_length=200,
         unique=True,
     )
     color = models.CharField(
         verbose_name='цвет метки',
-        max_length=16,
+        max_length=7,
         unique=True,
     )
     slug = models.SlugField(
         verbose_name='слаг',
-        max_length=50,
+        max_length=200,
         unique=True,
     )
 
