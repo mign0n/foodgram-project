@@ -9,12 +9,15 @@ User = get_user_model()
 class Ingredient(models.Model):
     name = models.CharField(
         verbose_name='ингредиент',
-        max_length=100,
+        max_length=200,
     )
     measurement_unit = models.CharField(
         verbose_name='единица измерения',
-        max_length=20,
+        max_length=200,
     )
+
+    class Meta:
+        default_related_name = '%(class)s'
 
     def __str__(self) -> str:
         return self.name
@@ -57,6 +60,7 @@ class Recipe(models.Model):
     ingredients = models.ManyToManyField(
         Ingredient,
         through='IngredientInRecipe',
+        related_name='recipe_ingredients',
         verbose_name='список ингредиентов рецепта',
     )
     name = models.CharField(
@@ -81,10 +85,12 @@ class Recipe(models.Model):
 
 
 class IngredientInRecipe(models.Model):
-    amount = models.FloatField(verbose_name='количество ингредиента в рецепте')
+    amount = models.IntegerField(
+        verbose_name='количество ингредиента в рецепте',
+    )
     ingredient = models.ForeignKey(
         Ingredient,
-        on_delete=models.RESTRICT,
+        on_delete=models.CASCADE,
         verbose_name='ингредиент',
     )
     recipe = models.ForeignKey(
