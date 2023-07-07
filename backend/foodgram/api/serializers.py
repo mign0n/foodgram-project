@@ -1,3 +1,6 @@
+import base64
+
+from django.core.files.base import ContentFile
 from djoser.serializers import UserCreateSerializer as UserCreateBaseSerializer
 from djoser.serializers import UserSerializer as UserBaseSerializer
 from recipes.models import Ingredient, IngredientInRecipe, Recipe, Tag
@@ -73,6 +76,15 @@ class IngredientInRecipeSerializer(serializers.ModelSerializer):
         )
 
 
+class Base64ImageField(serializers.ImageField):
+    def to_internal_value(self, data):
+        if isinstance(data, str) and data.startswith('data:image'):
+            img_format, img_str = data.split(';base64,')
+            _, ext = img_format.split('/')
+            data = ContentFile(base64.b64decode(img_str), name='temp.' + ext)
+        return super().to_internal_value(data)
+
+
 class RecipeSerializer(serializers.ModelSerializer):
     tags = TagSerializer(
         many=True,
@@ -91,6 +103,7 @@ class RecipeSerializer(serializers.ModelSerializer):
         source='in_shopping_cart_count',
         read_only=True,
     )
+    image = Base64ImageField()
 
     class Meta:
         model = Recipe
