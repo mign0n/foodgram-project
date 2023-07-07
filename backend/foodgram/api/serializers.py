@@ -29,6 +29,7 @@ class TagSerializer(serializers.ModelSerializer):
             'color',
             'slug',
         )
+        read_only_fields = ('id',)
 
 
 class IngredientSerializer(serializers.ModelSerializer):
@@ -73,7 +74,10 @@ class IngredientInRecipeSerializer(serializers.ModelSerializer):
 
 
 class RecipeSerializer(serializers.ModelSerializer):
-    tags = TagSerializer(many=True)
+    tags = TagSerializer(
+        many=True,
+        read_only=True,
+    )
     author = UsersSerializer(read_only=True)
     ingredients = IngredientInRecipeSerializer(
         source='ingredientinrecipe',
@@ -107,6 +111,25 @@ class RecipeSerializer(serializers.ModelSerializer):
             'tags',
             'author',
         )
+
+    def create(self, validated_data):
+        request = self.context['request']
+        _ = validated_data.pop('ingredientinrecipe')
+        instance = self.Meta.model.objects.create(
+            author=request.user,
+            **validated_data,
+        )
+        instance.ingredientinrecipe.set(
+            [
+                IngredientInRecipe.objects.create(
+                    ingredient=Ingredient.objects.get(pk=ingredient['id']),
+                    amount=ingredient['amount'],
+                )
+                for ingredient in request.data.get('ingredients')
+            ]
+        )
+        instance.tags.set(Tag.objects.filter(pk__in=request.data.pop('tags')))
+        return instance
 
     def to_representation(self, instance):
         representation = super(
