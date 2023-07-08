@@ -1,6 +1,7 @@
 import base64
 
 from django.core.files.base import ContentFile
+from django.shortcuts import get_object_or_404
 from djoser.serializers import UserCreateSerializer as UserCreateBaseSerializer
 from djoser.serializers import UserSerializer as UserBaseSerializer
 from recipes.models import Ingredient, IngredientInRecipe, Recipe, Tag
@@ -135,13 +136,40 @@ class RecipeSerializer(serializers.ModelSerializer):
         instance.ingredientinrecipe.set(
             [
                 IngredientInRecipe.objects.create(
-                    ingredient=Ingredient.objects.get(pk=ingredient['id']),
+                    ingredient=get_object_or_404(
+                        Ingredient,
+                        pk=ingredient['id'],
+                    ),
                     amount=ingredient['amount'],
                 )
                 for ingredient in request.data.get('ingredients')
             ]
         )
         instance.tags.set(Tag.objects.filter(pk__in=request.data.pop('tags')))
+        return instance
+
+    def update(self, instance, validated_data):
+        request = self.context['request']
+
+        validated_data.pop('ingredientinrecipe')
+
+        ingredients_ids = []
+        for ingredient in request.data.get('ingredients'):
+            recipe_ingredient, _ = IngredientInRecipe.objects.update_or_create(
+                amount=ingredient['amount'],
+                ingredient=Ingredient.objects.get(pk=ingredient['id']),
+                recipe=instance,
+                defaults=ingredient,
+            )
+            ingredients_ids.append(recipe_ingredient.pk)
+        instance.ingredients.set(ingredients_ids)
+
+        for field, value in validated_data.items():
+            setattr(instance, field, value)
+
+        instance.tags.set(request.data.get('tags', instance.tags))
+        instance.save()
+
         return instance
 
     def to_representation(self, instance):
