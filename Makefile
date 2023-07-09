@@ -28,4 +28,4 @@ style:
 	pymarkdown scan .
 
 test:
-	pytest
+	pytest -c $(WORKDIR)/pyproject.toml

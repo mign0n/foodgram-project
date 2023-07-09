@@ -1,0 +1,36 @@
+import json
+from http import HTTPStatus
+
+import pytest
+
+from tests.test_api.factories import TagFactory
+
+pytestmark = pytest.mark.django_db
+
+
+class TestTagEndpoints:
+    endpoint = '/api/tags/'
+
+    def test_list(self, api_client):
+        TagFactory.create_batch(3)
+        response = api_client.get(self.endpoint)
+        assert response.status_code == HTTPStatus.OK
+        assert len(json.loads(response.content)) == 3
+
+    def test_retrive_ok(self, api_client):
+        tag = TagFactory.create()
+        expected = {
+            'id': tag.pk,
+            'name': tag.name,
+            'color': tag.color,
+            'slug': tag.slug,
+        }
+        response = api_client.get(f'{self.endpoint}{tag.pk}/')
+        assert response.status_code == HTTPStatus.OK
+        assert json.loads(response.content) == expected
+
+    def test_retrive_notfound(self, api_client):
+        expected = {'detail': 'Страница не найдена.'}
+        response = api_client.get(f'{self.endpoint}{1}/')
+        assert response.status_code == HTTPStatus.NOT_FOUND
+        assert json.loads(response.content) == expected
