@@ -75,3 +75,23 @@ class TestRecipeEndpoints:
             f'(`results`) ответа API с эндпоинта `{self.endpoint}` имеет '
             'неверный тип данных.',
         )
+
+    def test_results_ingredients_is_correct(
+        self,
+        api_client: APIClient,
+        fill_recipe_with_ingredients_batch: Callable,
+    ) -> None:
+        ingredient = fill_recipe_with_ingredients_batch(1)[0]
+        expected = [
+            {
+                'id': ingredient.pk,
+                'name': ingredient.name,
+                'measurement_unit': ingredient.measurement_unit,
+                'amount': ingredient.ingredientinrecipe.get().amount,
+            }
+        ]
+        response = api_client.get(self.endpoint)
+        api_results = json.loads(response.content).get('results')
+        assert (
+            api_results[0].get('ingredients') == expected
+        ), 'Список ингредиентов в ответе API не соответствует ожидаемому.'
