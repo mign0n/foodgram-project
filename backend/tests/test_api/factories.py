@@ -1,10 +1,8 @@
-import base64
-
-import faker
 from factory import RelatedFactory, SubFactory, post_generation
 from factory.django import DjangoModelFactory
 from factory.faker import Faker
 from recipes.models import Ingredient, IngredientInRecipe, Recipe, Tag, User
+from tests.utils import generate_base64_image_string
 
 
 class UserFactory(DjangoModelFactory):
@@ -34,16 +32,6 @@ class TagFactory(DjangoModelFactory):
     class Meta:
         model = Tag
         django_get_or_create = ('name', 'color', 'slug')
-
-
-def generate_base64_image_string() -> str:
-    fake = faker.Faker()
-    return ''.join(
-        (
-            'data:image/png;base64,',
-            base64.b64encode(fake.image()).decode('utf-8'),
-        )
-    )
 
 
 class RecipeFactory(DjangoModelFactory):

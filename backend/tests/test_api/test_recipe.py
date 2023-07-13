@@ -4,22 +4,9 @@ from typing import Callable
 
 import pytest
 from rest_framework.test import APIClient
+from tests.utils import check_types
 
 pytestmark = pytest.mark.django_db
-
-
-def check_types(
-    checking_obj: dict[str, object],
-    expected_obj: dict[str, type],
-) -> bool:
-    if checking_obj.keys() != expected_obj.keys():
-        return False
-    return all(
-        [
-            isinstance(value, expected_obj.get(key))  # type: ignore
-            for key, value in checking_obj.items()
-        ]
-    )
 
 
 class TestRecipeEndpoints:
@@ -54,7 +41,7 @@ class TestRecipeEndpoints:
             'Ответ API с эндпоинта '
             f'`{self.endpoint}` содержит неверные ключи.'
         )
-        assert check_types(content, expected), (  # type: ignore
+        assert check_types(content, expected), (
             f'Значение какого-либо ключа (`{expected.keys()}`) в ответе '
             f'API с эндпоинта `{self.endpoint}` имеет неверный тип данных.',
         )
