@@ -95,3 +95,82 @@ class TestRecipeEndpoints:
         assert (
             api_results[0].get('ingredients') == expected
         ), 'Список ингредиентов в ответе API не соответствует ожидаемому.'
+
+    def test_retrieve_recipe_with_tags(
+        self,
+        api_client: APIClient,
+        fill_recipe_with_tags_batch: Callable,
+    ) -> None:
+        required_id = 3
+        recipe = fill_recipe_with_tags_batch()[required_id - 1]
+        tag = recipe.tags.get(pk=1)
+        response = api_client.get(f'{self.endpoint}{required_id}/')
+        api_content = json.loads(response.content)
+        expected = {
+            'id': recipe.pk,
+            'tags': [
+                {
+                    'id': tag.pk,
+                    'name': tag.name,
+                    'color': tag.color,
+                    'slug': tag.slug,
+                }
+            ],
+        }
+        for key, value in expected.items():
+            assert api_content.get(key) == value, (
+                f'В рецепте значение `{value}` ключа `{key}` '
+                f'не совпадает с ожидаемым `{api_content.get(key)}`.'
+            )
+
+    def test_retrieve_recipe_with_ingredients(
+        self,
+        api_client: APIClient,
+        fill_recipe_with_ingredients_batch: Callable,
+    ) -> None:
+        required_id = 3
+        ingredient = fill_recipe_with_ingredients_batch()[required_id - 1]
+        recipe = ingredient.ingredientinrecipe.get().recipe
+        response = api_client.get(f'{self.endpoint}{required_id}/')
+        api_content = json.loads(response.content)
+        expected = {
+            'id': recipe.pk,
+            'tags': [],
+            'author': {
+                'email': recipe.author.email,
+                'id': recipe.author.pk,
+                'username': recipe.author.username,
+                'first_name': recipe.author.first_name,
+                'last_name': recipe.author.last_name,
+                # 'is_subscribed': 'false',
+            },
+            'ingredients': [
+                {
+                    'id': ingredient.pk,
+                    'name': ingredient.name,
+                    'measurement_unit': ingredient.measurement_unit,
+                    'amount': ingredient.ingredientinrecipe.get().amount,
+                }
+            ],
+            'is_favorited': bool(recipe.favorite_count),
+            'is_in_shopping_cart': bool(recipe.in_shopping_cart_count),
+            'name': recipe.name,
+            'image': ''.join(('http://testserver', recipe.image.url)),
+            'text': recipe.text,
+            'cooking_time': recipe.cooking_time,
+        }
+        assert api_content == expected, (
+            'Хотя бы одно поле в запрошенном '
+            'рецепте не соответствует ожидаем(-ым)ому.'
+        )
+
+    def test_retrive_recipe_notfound(self, api_client: APIClient) -> None:
+        expected = {'detail': 'Страница не найдена.'}
+        url = f'{self.endpoint}{1}/'
+        response = api_client.get(url)
+        assert (
+            response.status_code == HTTPStatus.NOT_FOUND
+        ), f'Неверный код ответа API с эндпоинта `{url}`.'
+        assert (
+            json.loads(response.content) == expected
+        ), 'Неверное описание ошибки 404.'

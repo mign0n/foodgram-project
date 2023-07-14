@@ -37,3 +37,14 @@ def fill_recipe_with_ingredients_batch() -> Callable:
         return RecipeWithIngredient.create_batch(recipe_quantity)
 
     return wrap
+
+
+@pytest.fixture()
+def fill_recipe_with_tags_batch(fill_tag_batch) -> Callable:
+    def wrap(recipe_quantity: int = 5) -> DjangoModelFactory:
+        return RecipeFactory.create_batch(
+            recipe_quantity,
+            tags=fill_tag_batch(1),
+        )
+
+    return wrap
