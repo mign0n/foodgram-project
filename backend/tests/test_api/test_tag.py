@@ -8,17 +8,17 @@ from tests.test_api.factories import TagFactory
 
 pytestmark = pytest.mark.django_db
 
+ENDPOINT = '/api/tags/'
+
 
 class TestTagEndpoints:
-    endpoint = '/api/tags/'
-
     def test_list(
         self,
         api_client: APIClient,
         fill_tag_batch: Callable,
     ) -> None:
         fill_tag_batch(3)
-        response = api_client.get(self.endpoint)
+        response = api_client.get(ENDPOINT)
         assert response.status_code == HTTPStatus.OK
         assert len(json.loads(response.content)) == 3
 
@@ -30,12 +30,12 @@ class TestTagEndpoints:
             'color': tag.color,
             'slug': tag.slug,
         }
-        response = api_client.get(f'{self.endpoint}{tag.pk}/')
+        response = api_client.get(f'{ENDPOINT}{tag.pk}/')
         assert response.status_code == HTTPStatus.OK
         assert json.loads(response.content) == expected
 
     def test_retrive_notfound(self, api_client: APIClient) -> None:
         expected = {'detail': 'Страница не найдена.'}
-        response = api_client.get(f'{self.endpoint}{1}/')
+        response = api_client.get(f'{ENDPOINT}{1}/')
         assert response.status_code == HTTPStatus.NOT_FOUND
         assert json.loads(response.content) == expected

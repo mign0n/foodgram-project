@@ -8,15 +8,15 @@ from tests.utils import check_types
 
 pytestmark = pytest.mark.django_db
 
+ENDPOINT = '/api/recipes/'
 
-class TestRecipeEndpoints:
-    endpoint = '/api/recipes/'
 
+class TestGetRecipeList:
     def test_endpoint_status_ok(self, api_client: APIClient) -> None:
-        response = api_client.get(self.endpoint)
+        response = api_client.get(ENDPOINT)
         assert (
             response.status_code == HTTPStatus.OK
-        ), f'Неверный код ответа API с эндпоинта `{self.endpoint}`.'
+        ), f'Неверный код ответа API с эндпоинта `{ENDPOINT}`.'
 
     def test_no_lost_recipes(
         self,
@@ -24,12 +24,12 @@ class TestRecipeEndpoints:
         fill_recipe_without_m2m_batch: Callable,
     ) -> None:
         fill_recipe_without_m2m_batch()
-        response = api_client.get(self.endpoint)
+        response = api_client.get(ENDPOINT)
         content = json.loads(response.content)
         assert content.get('count') == 5, 'Неверное количество рецептов.'
 
     def test_correct_main_data_structure(self, api_client: APIClient) -> None:
-        response = api_client.get(self.endpoint)
+        response = api_client.get(ENDPOINT)
         content = json.loads(response.content)
         expected = {
             'count': int,
@@ -38,12 +38,11 @@ class TestRecipeEndpoints:
             'results': list,
         }
         assert content.keys() == expected.keys(), (
-            'Ответ API с эндпоинта '
-            f'`{self.endpoint}` содержит неверные ключи.'
+            'Ответ API с эндпоинта ' f'`{ENDPOINT}` содержит неверные ключи.'
         )
         assert check_types(content, expected), (
             f'Значение какого-либо ключа (`{expected.keys()}`) в ответе '
-            f'API с эндпоинта `{self.endpoint}` имеет неверный тип данных.',
+            f'API с эндпоинта `{ENDPOINT}` имеет неверный тип данных.',
         )
 
     def test_results_keys_is_correct(
@@ -64,15 +63,15 @@ class TestRecipeEndpoints:
             'cooking_time': int,
         }
         fill_recipe_without_m2m_batch(1)
-        response = api_client.get(self.endpoint)
+        response = api_client.get(ENDPOINT)
         api_results = json.loads(response.content).get('results')[0]
         assert api_results.keys() == expected.keys(), (
-            f'Данные (`results`) ответа API с эндпоинта `{self.endpoint}` '
+            f'Данные (`results`) ответа API с эндпоинта `{ENDPOINT}` '
             'содержит неверные ключи.'
         )
         assert check_types(api_results, expected), (
             f'Значение какого-либо ключа (`{expected.keys()}`) в данных '
-            f'(`results`) ответа API с эндпоинта `{self.endpoint}` имеет '
+            f'(`results`) ответа API с эндпоинта `{ENDPOINT}` имеет '
             'неверный тип данных.',
         )
 
@@ -90,12 +89,14 @@ class TestRecipeEndpoints:
                 'amount': ingredient.ingredientinrecipe.get().amount,
             }
         ]
-        response = api_client.get(self.endpoint)
+        response = api_client.get(ENDPOINT)
         api_results = json.loads(response.content).get('results')
         assert (
             api_results[0].get('ingredients') == expected
         ), 'Список ингредиентов в ответе API не соответствует ожидаемому.'
 
+
+class TestGetRecipe:
     def test_retrieve_recipe_with_tags(
         self,
         api_client: APIClient,
@@ -104,7 +105,7 @@ class TestRecipeEndpoints:
         required_id = 3
         recipe = fill_recipe_with_tags_batch()[required_id - 1]
         tag = recipe.tags.get(pk=1)
-        response = api_client.get(f'{self.endpoint}{required_id}/')
+        response = api_client.get(f'{ENDPOINT}{required_id}/')
         api_content = json.loads(response.content)
         expected = {
             'id': recipe.pk,
@@ -131,7 +132,7 @@ class TestRecipeEndpoints:
         required_id = 3
         ingredient = fill_recipe_with_ingredients_batch()[required_id - 1]
         recipe = ingredient.ingredientinrecipe.get().recipe
-        response = api_client.get(f'{self.endpoint}{required_id}/')
+        response = api_client.get(f'{ENDPOINT}{required_id}/')
         api_content = json.loads(response.content)
         expected = {
             'id': recipe.pk,
@@ -166,7 +167,7 @@ class TestRecipeEndpoints:
 
     def test_retrive_recipe_notfound(self, api_client: APIClient) -> None:
         expected = {'detail': 'Страница не найдена.'}
-        url = f'{self.endpoint}{1}/'
+        url = f'{ENDPOINT}{1}/'
         response = api_client.get(url)
         assert (
             response.status_code == HTTPStatus.NOT_FOUND
@@ -174,3 +175,8 @@ class TestRecipeEndpoints:
         assert (
             json.loads(response.content) == expected
         ), 'Неверное описание ошибки 404.'
+
+
+class TestPostRecipe:
+    def test_create_recipe_ok(self):
+        pass
