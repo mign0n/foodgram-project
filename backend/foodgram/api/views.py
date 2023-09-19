@@ -1,4 +1,5 @@
 from api import serializers
+from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet as UserBaseViewSet
 from recipes.models import Recipe, Tag, User
 from rest_framework import viewsets
@@ -20,3 +21,5 @@ class RecipeViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticatedOrReadOnly]
     queryset = Recipe.objects.all().order_by('-pub_date')
     serializer_class = serializers.RecipeSerializer
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['author', 'tags']
