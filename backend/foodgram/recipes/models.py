@@ -73,6 +73,14 @@ class Recipe(models.Model):
     )
     tags = models.ManyToManyField(Tag, verbose_name='список меток')
     text = models.TextField(verbose_name='описание рецепта')
+    is_favorited = models.BooleanField(
+        verbose_name='рецепт в списке избранных',
+        default=False,
+    )
+    is_in_shopping_cart = models.BooleanField(
+        verbose_name='рецепт в списке покупок',
+        default=False,
+    )
     favorite_count = models.IntegerField(default=0, blank=True)
     in_shopping_cart_count = models.IntegerField(default=0, blank=True)
 

@@ -22,4 +22,9 @@ class RecipeViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.all().order_by('-pub_date')
     serializer_class = serializers.RecipeSerializer
     filter_backends = [DjangoFilterBackend]
-    filterset_fields = ['author', 'tags']
+    filterset_fields = [
+        'author',
+        'tags',
+        'is_favorited',
+        'is_in_shopping_cart',
+    ]
