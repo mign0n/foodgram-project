@@ -10,7 +10,7 @@ asgiref==3.7.2
     # via django
 black==23.3.0
     # via foodgram (backend/pyproject.toml)
-certifi==2023.5.7
+certifi==2023.7.22
     # via requests
 cffi==1.15.1
     # via cryptography
