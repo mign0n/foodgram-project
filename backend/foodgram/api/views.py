@@ -1,9 +1,9 @@
-from api import serializers
+from api import filters, serializers
 from django.db.models import QuerySet
 from django.utils.functional import cached_property
 from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet as UserBaseViewSet
-from recipes.models import Recipe, Tag, User
+from recipes.models import Ingredient, Recipe, Tag, User
 from rest_framework import mixins, viewsets
 from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import (
@@ -22,6 +22,14 @@ class TagViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticatedOrReadOnly]
     queryset = Tag.objects.all().order_by('id')
     serializer_class = serializers.TagSerializer
+
+
+class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
+    pagination_class = None
+    queryset = Ingredient.objects.all().order_by('id')
+    serializer_class = serializers.IngredientSerializer
+    filter_backends = (filters.IngredientSearchFilter,)
+    search_fields = ('^name',)
 
 
 class RecipeViewSet(viewsets.ModelViewSet):
