@@ -1,4 +1,4 @@
-from api.views import RecipeViewSet, TagViewSet, UserViewSet
+from api.views import FavoriteViewSet, RecipeViewSet, TagViewSet, UserViewSet
 from django.urls import include, path
 from rest_framework.routers import SimpleRouter
 
@@ -11,5 +11,10 @@ router.register('recipes', RecipeViewSet, basename='recipes')
 
 urlpatterns = [
     path('', include(router.urls)),
+    path(
+        'recipes/<int:recipe_id>/favorite/',
+        FavoriteViewSet.as_view({'post': 'create', 'delete': 'destroy'}),
+        name='favorite',
+    ),
     path('auth/', include('djoser.urls.authtoken')),
 ]

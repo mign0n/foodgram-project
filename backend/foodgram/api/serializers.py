@@ -4,7 +4,13 @@ from django.core.files.base import ContentFile
 from django.shortcuts import get_object_or_404
 from djoser.serializers import UserCreateSerializer as UserCreateBaseSerializer
 from djoser.serializers import UserSerializer as UserBaseSerializer
-from recipes.models import Ingredient, IngredientInRecipe, Recipe, Tag
+from recipes.models import (
+    Favorite,
+    Ingredient,
+    IngredientInRecipe,
+    Recipe,
+    Tag,
+)
 from rest_framework import serializers
 
 EXTRA_FIELDS = (
@@ -188,3 +194,21 @@ class RecipeSerializer(serializers.ModelSerializer):
             )
         ]
         return representation
+
+
+class FavoriteSerializer(serializers.ModelSerializer):
+    name = serializers.CharField(source='recipe.name', required=False)
+    image = Base64ImageField(source='recipe.image', required=False)
+    cooking_time = serializers.IntegerField(
+        source='recipe.cooking_time',
+        required=False,
+    )
+
+    class Meta:
+        model = Favorite
+        fields = (
+            'id',
+            'name',
+            'image',
+            'cooking_time',
+        )
