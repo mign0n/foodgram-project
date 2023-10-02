@@ -92,6 +92,7 @@ class TagViewSet(
 
 class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
     pagination_class = None
+    permission_classes = [IsAuthenticatedOrReadOnly]
     queryset = Ingredient.objects.all().order_by('id')
     serializer_class = serializers.IngredientSerializer
     filter_backends = (filters.IngredientSearchFilter,)
