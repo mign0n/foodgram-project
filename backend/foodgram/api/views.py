@@ -54,6 +54,7 @@ class UserViewSet(UserBaseViewSet):
 
     @action(methods=('POST', 'DELETE'), detail=True)  # type: ignore
     def subscribe(self, request: Request, id: int) -> Response:
+        author = self.author
         self.kwargs['author'] = id
         self.kwargs['user'] = self.request.user.pk
         serializer = serializers.SubscribeSerializer(
@@ -70,12 +71,13 @@ class UserViewSet(UserBaseViewSet):
             serializer.save(**serializer.validated_data)
             return Response(
                 serializers.UserWithRecipesSerializer(
-                    self.author,
+                    author,
                     context={'request': self.request},
                 ).data,
+                status=status.HTTP_201_CREATED,
             )
         if request.method == 'DELETE':
-            self.author.subscribe.filter(**serializer.data).delete()
+            author.subscribe.filter(**serializer.data).delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
 
 
