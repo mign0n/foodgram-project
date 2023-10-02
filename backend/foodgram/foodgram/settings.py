@@ -104,10 +104,13 @@ DJOSER = {
         'user_create': 'api.serializers.UserCreateSerializer',
     },
     'PERMISSIONS': {
-        'user': ['rest_framework.permissions.IsAuthenticated'],
+        'user': ['rest_framework.permissions.IsAuthenticatedOrReadOnly'],
+        'user_me': ['rest_framework.permissions.IsAuthenticated'],
         'user_list': ['rest_framework.permissions.IsAuthenticatedOrReadOnly'],
     },
 }
+
+AUTH_USER_MODEL = 'users.CustomUser'
 
 LANGUAGE_CODE = 'ru'
 

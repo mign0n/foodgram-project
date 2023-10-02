@@ -2,12 +2,14 @@ from api import filters, serializers
 from django.db.models import QuerySet
 from django.utils.functional import cached_property
 from django_filters.rest_framework import DjangoFilterBackend
+from djoser.conf import settings
 from djoser.views import UserViewSet as UserBaseViewSet
 from recipes.models import Ingredient, Recipe, Tag, User
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import (
+    BasePermission,
     IsAuthenticated,
     IsAuthenticatedOrReadOnly,
 )
@@ -18,6 +20,15 @@ from rest_framework.serializers import ModelSerializer
 
 class UserViewSet(UserBaseViewSet):
     queryset = User.objects.all().order_by('date_joined')
+
+    def get_permissions(self) -> list[BasePermission]:
+        if (
+            self.action == 'me'
+            and self.request
+            and self.request.method == 'GET'
+        ):
+            self.permission_classes = settings.PERMISSIONS.user_me
+        return super().get_permissions()
 
     @cached_property
     def author(self) -> QuerySet:
