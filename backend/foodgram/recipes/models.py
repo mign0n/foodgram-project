@@ -196,6 +196,16 @@ class Subscribe(models.Model):
 
     class Meta:
         default_related_name = '%(class)s'
+        constraints = [
+            models.UniqueConstraint(
+                fields=('author', 'user'),
+                name='unique_subscribe',
+            ),
+            models.CheckConstraint(
+                check=~models.Q(author=models.F('user')),
+                name='author_is_not_user',
+            ),
+        ]
 
     def __str__(self) -> str:
         return f'{self.user} подписан на {self.author}'

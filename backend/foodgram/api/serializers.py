@@ -1,5 +1,6 @@
 import base64
 
+from django.contrib.auth.models import AbstractUser
 from django.core.files.base import ContentFile
 from django.shortcuts import get_object_or_404
 from djoser.serializers import UserCreateSerializer as UserCreateBaseSerializer
@@ -9,6 +10,7 @@ from recipes.models import (
     Ingredient,
     IngredientInRecipe,
     Recipe,
+    Subscribe,
     Tag,
 )
 from rest_framework import serializers
@@ -20,14 +22,49 @@ EXTRA_FIELDS = (
 )
 
 
+class Base64ImageField(serializers.ImageField):
+    def to_internal_value(self, data):
+        if isinstance(data, str) and data.startswith('data:image'):
+            img_format, img_str = data.split(';base64,')
+            _, ext = img_format.split('/')
+            data = ContentFile(base64.b64decode(img_str), name='temp.' + ext)
+        return super().to_internal_value(data)
+
+
+class RecipeMinifiedSerializer(serializers.ModelSerializer):
+    image = Base64ImageField()
+
+    class Meta:
+        model = Recipe
+        fields = (
+            'id',
+            'name',
+            'image',
+            'cooking_time',
+        )
+        read_only_fields = ('id',)
+
+
 class UsersSerializer(UserBaseSerializer):
+    is_subscribed = serializers.SerializerMethodField()
+
     class Meta(UserBaseSerializer.Meta):
-        fields = UserBaseSerializer.Meta.fields + EXTRA_FIELDS
+        fields = (
+            *UserBaseSerializer.Meta.fields,
+            *EXTRA_FIELDS,
+            'is_subscribed',
+        )
+
+    def get_is_subscribed(self, obj: AbstractUser) -> bool:
+        return obj.subscribe.exists()
 
 
 class UserCreateSerializer(UserCreateBaseSerializer):
     class Meta(UserCreateBaseSerializer.Meta):
-        fields = UserCreateBaseSerializer.Meta.fields + EXTRA_FIELDS
+        fields = (
+            *UserCreateBaseSerializer.Meta.fields,
+            *EXTRA_FIELDS,
+        )
 
 
 class TagSerializer(serializers.ModelSerializer):
@@ -84,16 +121,7 @@ class IngredientInRecipeSerializer(serializers.ModelSerializer):
         )
 
 
-class Base64ImageField(serializers.ImageField):
-    def to_internal_value(self, data):
-        if isinstance(data, str) and data.startswith('data:image'):
-            img_format, img_str = data.split(';base64,')
-            _, ext = img_format.split('/')
-            data = ContentFile(base64.b64decode(img_str), name='temp.' + ext)
-        return super().to_internal_value(data)
-
-
-class RecipeSerializer(serializers.ModelSerializer):
+class RecipeSerializer(RecipeMinifiedSerializer):
     tags = TagSerializer(
         many=True,
         read_only=True,
@@ -111,7 +139,6 @@ class RecipeSerializer(serializers.ModelSerializer):
         source='in_shopping_cart_count',
         read_only=True,
     )
-    image = Base64ImageField()
 
     class Meta:
         model = Recipe
@@ -213,3 +240,58 @@ class FavoriteSerializer(serializers.ModelSerializer):
             'image',
             'cooking_time',
         )
+
+
+class UserWithRecipesSerializer(UsersSerializer):
+    recipes = serializers.SerializerMethodField()
+    recipes_count = serializers.SerializerMethodField()
+
+    class Meta(UsersSerializer.Meta):
+        fields = (
+            *UsersSerializer.Meta.fields,
+            'recipes',
+            'recipes_count',
+        )
+
+    def get_recipes(self, obj: AbstractUser) -> list[dict]:
+        recipes_limit = self.context.get('request').query_params.get(
+            'recipes_limit'
+        )
+        if recipes_limit is not None and recipes_limit.isdigit():
+            recipes_limit = int(recipes_limit)
+        else:
+            recipes_limit = None
+        return RecipeMinifiedSerializer(
+            obj.recipe.all()[:recipes_limit],
+            many=True,
+        ).data
+
+    def get_recipes_count(self, obj: AbstractUser) -> int:
+        return obj.recipe.count()
+
+
+class SubscribeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Subscribe
+        fields = (
+            'author',
+            'user',
+        )
+
+    def validate_author(self, value):
+        request = self.context.get('request')
+        queryset = self.Meta.model.objects.filter(
+            author__exact=value,
+            user__exact=request.user,
+        )
+        if value == request.user:
+            raise serializers.ValidationError(
+                'You can not subscribe to yourself.'
+            )
+        if request.method != 'DELETE' and queryset.exists():
+            raise serializers.ValidationError(
+                'The fields author, user must make a unique set.'
+            )
+        if request.method == 'DELETE' and not queryset.exists():
+            raise serializers.ValidationError('The object is not exists.')
+        return value
