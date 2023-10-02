@@ -79,7 +79,11 @@ class UserViewSet(UserBaseViewSet):
             return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-class TagViewSet(viewsets.ModelViewSet):
+class TagViewSet(
+    mixins.ListModelMixin,
+    mixins.RetrieveModelMixin,
+    viewsets.GenericViewSet,
+):
     pagination_class = None
     permission_classes = [IsAuthenticatedOrReadOnly]
     queryset = Tag.objects.all().order_by('id')
