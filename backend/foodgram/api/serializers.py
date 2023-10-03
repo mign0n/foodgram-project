@@ -1,4 +1,5 @@
 import base64
+from typing import OrderedDict
 
 from django.contrib.auth.models import AbstractUser
 from django.core.files.base import ContentFile
@@ -231,6 +232,7 @@ class FavoriteSerializer(serializers.ModelSerializer):
         source='recipe.cooking_time',
         required=False,
     )
+    owner = serializers.HiddenField(default=serializers.CurrentUserDefault())
 
     class Meta:
         model = Favorite
@@ -239,7 +241,21 @@ class FavoriteSerializer(serializers.ModelSerializer):
             'name',
             'image',
             'cooking_time',
+            'owner',
         )
+
+    def validate(self, attrs: OrderedDict) -> OrderedDict:
+        recipe_id = self.context.get('kwargs').get('recipe_id')
+        if not Recipe.objects.filter(pk=recipe_id).exists():
+            raise serializers.ValidationError('The object is not exists.')
+        if self.Meta.model.objects.filter(
+            owner__exact=attrs.get('owner'),
+            recipe__exact=recipe_id,
+        ).exists():
+            raise serializers.ValidationError(
+                'The fields owner, recipe must make a unique set.'
+            )
+        return attrs
 
 
 class UserWithRecipesSerializer(UsersSerializer):

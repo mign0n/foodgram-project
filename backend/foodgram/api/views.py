@@ -126,6 +126,11 @@ class FavoriteViewSet(
     def get_queryset(self) -> QuerySet:
         return self._recipe.favorite.all()
 
+    def get_serializer_context(self):
+        serializer_context = super().get_serializer_context()
+        serializer_context['kwargs'] = self.kwargs
+        return serializer_context
+
     def perform_create(self, serializer: ModelSerializer) -> None:
         serializer.save(
             recipe=self._recipe,

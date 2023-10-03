@@ -121,6 +121,7 @@ class Favorite(models.Model):
     owner = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
+        related_name='owner',
         verbose_name='владелец списка избранных рецептов',
     )
     recipe = models.ForeignKey(
@@ -131,6 +132,12 @@ class Favorite(models.Model):
 
     class Meta:
         default_related_name = '%(class)s'
+        constraints = [
+            models.UniqueConstraint(
+                fields=('owner', 'recipe'),
+                name='unique_favorite_recipe',
+            ),
+        ]
 
     def count_favorite(self) -> int:
         return (
