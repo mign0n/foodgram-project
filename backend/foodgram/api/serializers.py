@@ -163,7 +163,7 @@ class RecipeSerializer(RecipeMinifiedSerializer):
 
     def create(self, validated_data):
         request = self.context['request']
-        _ = validated_data.pop('ingredientinrecipe')
+        validated_data.pop('ingredientinrecipe')
         instance = self.Meta.model.objects.create(
             author=request.user,
             **validated_data,
@@ -176,6 +176,7 @@ class RecipeSerializer(RecipeMinifiedSerializer):
                         pk=ingredient['id'],
                     ),
                     amount=ingredient['amount'],
+                    recipe=instance,
                 )
                 for ingredient in request.data.get('ingredients')
             ]
@@ -185,9 +186,7 @@ class RecipeSerializer(RecipeMinifiedSerializer):
 
     def update(self, instance, validated_data):
         request = self.context['request']
-
         validated_data.pop('ingredientinrecipe')
-
         ingredients_ids = []
         for ingredient in request.data.get('ingredients'):
             recipe_ingredient, _ = IngredientInRecipe.objects.update_or_create(
@@ -198,10 +197,8 @@ class RecipeSerializer(RecipeMinifiedSerializer):
             )
             ingredients_ids.append(recipe_ingredient.pk)
         instance.ingredients.set(ingredients_ids)
-
         for field, value in validated_data.items():
             setattr(instance, field, value)
-
         instance.tags.set(request.data.get('tags', instance.tags))
         instance.save()
 
