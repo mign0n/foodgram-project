@@ -1,4 +1,5 @@
 from api import filters, serializers
+from api.filters import RecipeFilterSet
 from django.db.models import QuerySet
 from django.utils.functional import cached_property
 from django_filters.rest_framework import DjangoFilterBackend
@@ -98,16 +99,17 @@ class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 class RecipeViewSet(viewsets.ModelViewSet):
-    permission_classes = [IsAuthenticatedOrReadOnly]
+    permission_classes = (IsAuthenticatedOrReadOnly,)
     queryset = Recipe.objects.all().order_by('-pub_date')
     serializer_class = serializers.RecipeSerializer
-    filter_backends = [DjangoFilterBackend]
-    filterset_fields = [
+    filter_backends = (DjangoFilterBackend,)
+    filterset_class = RecipeFilterSet
+    filterset_fields = (
         'author',
         'tags',
         'is_favorited',
         'is_in_shopping_cart',
-    ]
+    )
 
 
 class FavoriteViewSet(
