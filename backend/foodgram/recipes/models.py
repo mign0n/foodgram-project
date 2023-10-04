@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.core.validators import MinValueValidator
 from django.db import models
 from django.dispatch import receiver
 
@@ -50,7 +51,10 @@ class Recipe(models.Model):
         on_delete=models.CASCADE,
         verbose_name='автор рецепта',
     )
-    cooking_time = models.IntegerField(verbose_name='время приготовления')
+    cooking_time = models.PositiveSmallIntegerField(
+        verbose_name='время приготовления',
+        validators=(MinValueValidator(1),),
+    )
     image = models.ImageField(
         verbose_name='фото готового блюда',
         upload_to=settings.IMAGE_PATH,
@@ -93,10 +97,11 @@ class Recipe(models.Model):
 
 
 class IngredientInRecipe(models.Model):
-    amount = models.IntegerField(
+    amount = models.PositiveSmallIntegerField(
         verbose_name='количество ингредиента в рецепте',
+        validators=(MinValueValidator(1),),
     )
-    ingredient = models.ForeignKey(
+    ingredient = models.OneToOneField(
         Ingredient,
         on_delete=models.CASCADE,
         verbose_name='ингредиент',

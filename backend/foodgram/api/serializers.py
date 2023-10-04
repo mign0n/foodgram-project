@@ -3,7 +3,8 @@ from typing import OrderedDict
 
 from django.contrib.auth.models import AbstractUser
 from django.core.files.base import ContentFile
-from django.shortcuts import get_object_or_404
+from django.db.models import Model, QuerySet
+from django.utils.functional import cached_property
 from djoser.serializers import UserCreateSerializer as UserCreateBaseSerializer
 from djoser.serializers import UserSerializer as UserBaseSerializer
 from recipes.models import (
@@ -161,7 +162,41 @@ class RecipeSerializer(RecipeMinifiedSerializer):
             'author',
         )
 
-    def create(self, validated_data):
+    @cached_property
+    def _ingredients(self) -> QuerySet:
+        return Ingredient.objects.all()
+
+    @cached_property
+    def _ingredients_in_recipe(self) -> QuerySet:
+        return IngredientInRecipe.objects.all()
+
+    def validate_ingredients(
+        self,
+        value: list[OrderedDict],
+    ) -> list[OrderedDict]:
+        if not value:
+            raise serializers.ValidationError(
+                'The "ingredients" field must be filled in when the recipe is '
+                'created.'
+            )
+
+        ingredients = self.initial_data.get('ingredients')
+        if len(value) > len(
+            set([ingredient.get('id') for ingredient in ingredients])
+        ):
+            raise serializers.ValidationError(
+                'Repeating ingredients in the same recipe is unacceptable.'
+            )
+
+        for ingredient in ingredients:
+            ingredient_id = ingredient.get('id')
+            if not self._ingredients.filter(pk=ingredient_id).exists():
+                raise serializers.ValidationError(
+                    f'The ingredient with id={ingredient_id} does not exists.'
+                )
+        return value
+
+    def create(self, validated_data: dict) -> Model:
         request = self.context['request']
         validated_data.pop('ingredientinrecipe')
         instance = self.Meta.model.objects.create(
@@ -171,10 +206,7 @@ class RecipeSerializer(RecipeMinifiedSerializer):
         instance.ingredientinrecipe.set(
             [
                 IngredientInRecipe.objects.create(
-                    ingredient=get_object_or_404(
-                        Ingredient,
-                        pk=ingredient['id'],
-                    ),
+                    ingredient=self._ingredients.get(pk=ingredient['id']),
                     amount=ingredient['amount'],
                     recipe=instance,
                 )
@@ -189,9 +221,12 @@ class RecipeSerializer(RecipeMinifiedSerializer):
         validated_data.pop('ingredientinrecipe')
         ingredients_ids = []
         for ingredient in request.data.get('ingredients'):
-            recipe_ingredient, _ = IngredientInRecipe.objects.update_or_create(
+            (
+                recipe_ingredient,
+                _,
+            ) = self._ingredients_in_recipe.update_or_create(
                 amount=ingredient['amount'],
-                ingredient=Ingredient.objects.get(pk=ingredient['id']),
+                ingredient=self._ingredients.get(pk=ingredient['id']),
                 recipe=instance,
                 defaults=ingredient,
             )
