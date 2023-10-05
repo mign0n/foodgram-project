@@ -5,6 +5,8 @@ from django.utils.functional import cached_property
 from django_filters.rest_framework import DjangoFilterBackend
 from djoser.conf import settings
 from djoser.views import UserViewSet as UserBaseViewSet
+
+from api.permissions import IsAuthorOrReadOnly
 from recipes.models import Ingredient, Recipe, Tag, User
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
@@ -99,7 +101,7 @@ class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 class RecipeViewSet(viewsets.ModelViewSet):
-    permission_classes = (IsAuthenticatedOrReadOnly,)
+    permission_classes = (IsAuthenticatedOrReadOnly, IsAuthorOrReadOnly)
     queryset = Recipe.objects.all().order_by('-pub_date')
     serializer_class = serializers.RecipeSerializer
     filter_backends = (DjangoFilterBackend,)

@@ -179,7 +179,6 @@ class RecipeSerializer(RecipeMinifiedSerializer):
         self,
         value: list[OrderedDict],
     ) -> list[OrderedDict]:
-        print('VALIDATE_INGREDIENTS', value)
 
         if not value:
             raise serializers.ValidationError(
@@ -207,7 +206,6 @@ class RecipeSerializer(RecipeMinifiedSerializer):
         self,
         value: list[OrderedDict],
     ) -> list[OrderedDict]:
-        print('VALIDATE_TAGS', value)
         if not value:
             raise serializers.ValidationError(
                 'The "tags" field must be filled in when the recipe is '
@@ -223,9 +221,9 @@ class RecipeSerializer(RecipeMinifiedSerializer):
 
     def create(self, validated_data: dict) -> Model:
         request = self.context['request']
+        tags = validated_data.pop('tags')
+        validated_data.pop('ingredientinrecipe')
         with transaction.atomic():
-            tags = validated_data.pop('tags')
-            validated_data.pop('ingredientinrecipe')
             instance = self.Meta.model.objects.create(
                 author=request.user,
                 **validated_data,
@@ -243,8 +241,20 @@ class RecipeSerializer(RecipeMinifiedSerializer):
             instance.tags.set(tags)
         return instance
 
-    def update(self, instance, validated_data):
+    def update(self, instance: Model, validated_data: dict) -> Model:
         request = self.context['request']
+
+        if not validated_data.get('ingredientinrecipe'):
+            raise serializers.ValidationError(
+                'The "ingredients" field must be present when the recipe is '
+                'updated.'
+            )
+
+        if not validated_data.get('tags'):
+            raise serializers.ValidationError(
+                'The "tags" field must be present when the recipe is updated.'
+            )
+
         validated_data.pop('ingredientinrecipe')
         ingredients_ids = []
         with transaction.atomic():
@@ -260,14 +270,12 @@ class RecipeSerializer(RecipeMinifiedSerializer):
                 )
                 ingredients_ids.append(recipe_ingredient.pk)
             instance.ingredients.set(ingredients_ids)
-            for field, value in validated_data.items():
-                setattr(instance, field, value)
             instance.tags.set(request.data.get('tags', instance.tags))
             instance.save()
 
-        return instance
+        return super().update(instance, validated_data)
 
-    def to_representation(self, instance):
+    def to_representation(self, instance: Model) -> OrderedDict:
         representation = super(
             RecipeSerializer,
             self,
@@ -359,7 +367,7 @@ class SubscribeSerializer(serializers.ModelSerializer):
             'user',
         )
 
-    def validate_author(self, value):
+    def validate_author(self, value: AbstractUser) -> AbstractUser:
         request = self.context.get('request')
         queryset = self.Meta.model.objects.filter(
             author__exact=value,
