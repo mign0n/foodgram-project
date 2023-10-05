@@ -3,6 +3,7 @@ from typing import OrderedDict
 
 from django.contrib.auth.models import AbstractUser
 from django.core.files.base import ContentFile
+from django.db import transaction
 from django.db.models import Model, QuerySet
 from django.utils.functional import cached_property
 from djoser.serializers import UserCreateSerializer as UserCreateBaseSerializer
@@ -124,9 +125,9 @@ class IngredientInRecipeSerializer(serializers.ModelSerializer):
 
 
 class RecipeSerializer(RecipeMinifiedSerializer):
-    tags = TagSerializer(
+    tags = serializers.PrimaryKeyRelatedField(
+        queryset=Tag.objects.all(),
         many=True,
-        read_only=True,
     )
     author = UsersSerializer(read_only=True)
     ingredients = IngredientInRecipeSerializer(
@@ -170,10 +171,16 @@ class RecipeSerializer(RecipeMinifiedSerializer):
     def _ingredients_in_recipe(self) -> QuerySet:
         return IngredientInRecipe.objects.all()
 
+    @cached_property
+    def _tags(self) -> QuerySet:
+        return Tag.objects.all()
+
     def validate_ingredients(
         self,
         value: list[OrderedDict],
     ) -> list[OrderedDict]:
+        print('VALIDATE_INGREDIENTS', value)
+
         if not value:
             raise serializers.ValidationError(
                 'The "ingredients" field must be filled in when the recipe is '
@@ -196,46 +203,67 @@ class RecipeSerializer(RecipeMinifiedSerializer):
                 )
         return value
 
+    def validate_tags(
+        self,
+        value: list[OrderedDict],
+    ) -> list[OrderedDict]:
+        print('VALIDATE_TAGS', value)
+        if not value:
+            raise serializers.ValidationError(
+                'The "tags" field must be filled in when the recipe is '
+                'created.'
+            )
+
+        if len(value) > len(set([tag.pk for tag in value])):
+            raise serializers.ValidationError(
+                'Repeating tags in the same recipe is unacceptable.'
+            )
+
+        return value
+
     def create(self, validated_data: dict) -> Model:
         request = self.context['request']
-        validated_data.pop('ingredientinrecipe')
-        instance = self.Meta.model.objects.create(
-            author=request.user,
-            **validated_data,
-        )
-        instance.ingredientinrecipe.set(
-            [
-                IngredientInRecipe.objects.create(
-                    ingredient=self._ingredients.get(pk=ingredient['id']),
-                    amount=ingredient['amount'],
-                    recipe=instance,
-                )
-                for ingredient in request.data.get('ingredients')
-            ]
-        )
-        instance.tags.set(Tag.objects.filter(pk__in=request.data.pop('tags')))
+        with transaction.atomic():
+            tags = validated_data.pop('tags')
+            validated_data.pop('ingredientinrecipe')
+            instance = self.Meta.model.objects.create(
+                author=request.user,
+                **validated_data,
+            )
+            instance.ingredientinrecipe.set(
+                [
+                    IngredientInRecipe.objects.create(
+                        ingredient=self._ingredients.get(pk=ingredient['id']),
+                        amount=ingredient['amount'],
+                        recipe=instance,
+                    )
+                    for ingredient in request.data.get('ingredients')
+                ]
+            )
+            instance.tags.set(tags)
         return instance
 
     def update(self, instance, validated_data):
         request = self.context['request']
         validated_data.pop('ingredientinrecipe')
         ingredients_ids = []
-        for ingredient in request.data.get('ingredients'):
-            (
-                recipe_ingredient,
-                _,
-            ) = self._ingredients_in_recipe.update_or_create(
-                amount=ingredient['amount'],
-                ingredient=self._ingredients.get(pk=ingredient['id']),
-                recipe=instance,
-                defaults=ingredient,
-            )
-            ingredients_ids.append(recipe_ingredient.pk)
-        instance.ingredients.set(ingredients_ids)
-        for field, value in validated_data.items():
-            setattr(instance, field, value)
-        instance.tags.set(request.data.get('tags', instance.tags))
-        instance.save()
+        with transaction.atomic():
+            for ingredient in request.data.get('ingredients'):
+                (
+                    recipe_ingredient,
+                    _,
+                ) = self._ingredients_in_recipe.update_or_create(
+                    amount=ingredient['amount'],
+                    ingredient=self._ingredients.get(pk=ingredient['id']),
+                    recipe=instance,
+                    defaults=ingredient,
+                )
+                ingredients_ids.append(recipe_ingredient.pk)
+            instance.ingredients.set(ingredients_ids)
+            for field, value in validated_data.items():
+                setattr(instance, field, value)
+            instance.tags.set(request.data.get('tags', instance.tags))
+            instance.save()
 
         return instance
 
@@ -254,6 +282,11 @@ class RecipeSerializer(RecipeMinifiedSerializer):
                 representation.pop('ingredients'),
             )
         ]
+        representation['tags'] = TagSerializer(
+            instance.tags.all(),
+            many=True,
+            read_only=True,
+        ).data
         return representation
 
 
