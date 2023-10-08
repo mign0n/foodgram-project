@@ -122,31 +122,37 @@ class IngredientInRecipe(models.Model):
         )
 
 
-class Favorite(models.Model):
+class CartFavList(models.Model):
     owner = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        related_name='owner',
-        verbose_name='владелец списка избранных рецептов',
+        verbose_name='владелец списка',
     )
     recipe = models.ForeignKey(
         Recipe,
         on_delete=models.CASCADE,
-        verbose_name='список избранных рецептов',
+        verbose_name='рецепт в списке',
     )
 
     class Meta:
+        abstract = True
         default_related_name = '%(class)s'
         constraints = [
             models.UniqueConstraint(
                 fields=('owner', 'recipe'),
-                name='unique_favorite_recipe',
+                name='unique_%(class)s_recipe',
             ),
         ]
 
-    def count_favorite(self) -> int:
+    def __str__(self) -> str:
         return (
-            Favorite.objects.select_related(
+            f'Рецепт "{self.recipe.name}" в списке {self.__class__.__name__}s '
+            f'пользователя {self.owner}'
+        )
+
+    def count_list(self) -> int:
+        return (
+            self.__class__.objects.select_related(
                 'owner',
                 'recipe',
             )
@@ -154,9 +160,9 @@ class Favorite(models.Model):
             .count()
         )
 
-    def is_favorited(self) -> bool:
+    def is_in_list(self) -> bool:
         return (
-            Favorite.objects.select_related(
+            self.__class__.objects.select_related(
                 'owner',
                 'recipe',
             )
@@ -164,53 +170,13 @@ class Favorite(models.Model):
             .exists()
         )
 
-    def __str__(self) -> str:
-        return (
-            f'Рецепт "{self.recipe.name}" в списке избранных '
-            f'пользователя {self.owner}'
-        )
+
+class Favorite(CartFavList):
+    ...
 
 
-class Cart(models.Model):
-    owner = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        verbose_name='владелец списка рецептов для закупки продуктов',
-    )
-    recipe = models.ForeignKey(
-        Recipe,
-        on_delete=models.CASCADE,
-        verbose_name='список рецептов для закупки продуктов',
-    )
-
-    class Meta:
-        default_related_name = '%(class)s'
-
-    def count_recipes(self) -> int:
-        return (
-            Cart.objects.select_related(
-                'owner',
-                'recipe',
-            )
-            .filter(recipe=self.recipe)
-            .count()
-        )
-
-    def is_in_cart(self) -> bool:
-        return (
-            Cart.objects.select_related(
-                'owner',
-                'recipe',
-            )
-            .filter(owner=self.owner, recipe=self.recipe)
-            .exists()
-        )
-
-    def __str__(self) -> str:
-        return (
-            f'Рецепт "{self.recipe.name}" в списке покупок '
-            f'пользователя {self.owner}'
-        )
+class Cart(CartFavList):
+    ...
 
 
 class Subscribe(models.Model):
@@ -250,13 +216,13 @@ class Subscribe(models.Model):
     ],
     sender=Favorite,
 )
-def update_favorite(instance: Favorite, **kwargs) -> None:
+def update_favorite(instance: CartFavList, **kwargs) -> None:
     del kwargs
     Recipe.objects.filter(
         pk=instance.recipe.pk,
     ).update(
-        is_favorited=instance.is_favorited(),
-        favorite_count=instance.count_favorite(),
+        is_favorited=instance.is_in_list(),
+        favorite_count=instance.count_list(),
     )
 
 
@@ -267,11 +233,11 @@ def update_favorite(instance: Favorite, **kwargs) -> None:
     ],
     sender=Cart,
 )
-def update_in_cart(instance: Cart, **kwargs) -> None:
+def update_in_cart(instance: CartFavList, **kwargs) -> None:
     del kwargs
     Recipe.objects.filter(
         pk=instance.recipe.pk,
     ).update(
-        is_in_shopping_cart=instance.is_in_cart(),
-        in_shopping_cart_count=instance.count_recipes(),
+        is_in_shopping_cart=instance.is_in_list(),
+        in_shopping_cart_count=instance.count_list(),
     )
