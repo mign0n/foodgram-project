@@ -150,8 +150,18 @@ class Favorite(models.Model):
                 'owner',
                 'recipe',
             )
-            .filter(recipe__pk=self.recipe.pk)
+            .filter(recipe=self.recipe)
             .count()
+        )
+
+    def is_favorited(self) -> bool:
+        return (
+            Favorite.objects.select_related(
+                'owner',
+                'recipe',
+            )
+            .filter(owner=self.owner, recipe=self.recipe)
+            .exists()
         )
 
     def __str__(self) -> str:
@@ -182,8 +192,18 @@ class Cart(models.Model):
                 'owner',
                 'recipe',
             )
-            .filter(recipe__pk=self.recipe.pk)
+            .filter(recipe=self.recipe)
             .count()
+        )
+
+    def is_in_cart(self) -> bool:
+        return (
+            Cart.objects.select_related(
+                'owner',
+                'recipe',
+            )
+            .filter(owner=self.owner, recipe=self.recipe)
+            .exists()
         )
 
     def __str__(self) -> str:
@@ -230,11 +250,14 @@ class Subscribe(models.Model):
     ],
     sender=Favorite,
 )
-def update_favorite_count(instance: Favorite, **kwargs) -> None:
+def update_favorite(instance: Favorite, **kwargs) -> None:
     del kwargs
     Recipe.objects.filter(
         pk=instance.recipe.pk,
-    ).update(favorite_count=instance.count_favorite())
+    ).update(
+        is_favorited=instance.is_favorited(),
+        favorite_count=instance.count_favorite(),
+    )
 
 
 @receiver(
@@ -244,8 +267,11 @@ def update_favorite_count(instance: Favorite, **kwargs) -> None:
     ],
     sender=Cart,
 )
-def update_in_cart_count(instance: Cart, **kwargs) -> None:
+def update_in_cart(instance: Cart, **kwargs) -> None:
     del kwargs
     Recipe.objects.filter(
         pk=instance.recipe.pk,
-    ).update(in_shopping_cart_count=instance.count_recipes())
+    ).update(
+        is_in_shopping_cart=instance.is_in_cart(),
+        in_shopping_cart_count=instance.count_recipes(),
+    )
