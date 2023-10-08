@@ -101,7 +101,7 @@ class IngredientInRecipe(models.Model):
         verbose_name='количество ингредиента в рецепте',
         validators=(MinValueValidator(1),),
     )
-    ingredient = models.OneToOneField(
+    ingredient = models.ForeignKey(
         Ingredient,
         on_delete=models.CASCADE,
         verbose_name='ингредиент',
