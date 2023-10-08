@@ -9,6 +9,7 @@ from django.utils.functional import cached_property
 from djoser.serializers import UserCreateSerializer as UserCreateBaseSerializer
 from djoser.serializers import UserSerializer as UserBaseSerializer
 from recipes.models import (
+    Cart,
     Favorite,
     Ingredient,
     IngredientInRecipe,
@@ -179,7 +180,6 @@ class RecipeSerializer(RecipeMinifiedSerializer):
         self,
         value: list[OrderedDict],
     ) -> list[OrderedDict]:
-
         if not value:
             raise serializers.ValidationError(
                 'The "ingredients" field must be filled in when the recipe is '
@@ -384,3 +384,24 @@ class SubscribeSerializer(serializers.ModelSerializer):
         if request.method == 'DELETE' and not queryset.exists():
             raise serializers.ValidationError('The object is not exists.')
         return value
+
+
+class CartSerializer(FavoriteSerializer):
+    class Meta:
+        model = Cart
+        fields = FavoriteSerializer.Meta.fields
+
+
+class CheckListSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    name = serializers.CharField()
+    measurement_unit = serializers.CharField()
+    amount = serializers.IntegerField()
+
+    class Meta:
+        fields = (
+            'id',
+            'name',
+            'measurement_unit',
+            'amount',
+        )

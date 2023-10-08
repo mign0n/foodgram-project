@@ -1,12 +1,12 @@
 from api import filters, serializers
 from api.filters import RecipeFilterSet
+from api.permissions import IsAuthorOrReadOnly
+from api.renderers import CSVRecipeDataRenderer, TextRecipeDataRenderer
 from django.db.models import QuerySet
 from django.utils.functional import cached_property
 from django_filters.rest_framework import DjangoFilterBackend
 from djoser.conf import settings
 from djoser.views import UserViewSet as UserBaseViewSet
-
-from api.permissions import IsAuthorOrReadOnly
 from recipes.models import Ingredient, Recipe, Tag, User
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
@@ -113,6 +113,57 @@ class RecipeViewSet(viewsets.ModelViewSet):
         'is_in_shopping_cart',
     )
 
+    @action(
+        methods=('GET',),
+        detail=False,
+        renderer_classes=(CSVRecipeDataRenderer, TextRecipeDataRenderer),
+    )  # type: ignore
+    def download_shopping_cart(self, request: Request) -> Response:
+        queryset = self.get_queryset().filter(cart__owner=request.user)
+        ingredients = [
+            {
+                'id': ingr.get('ingredientinrecipe__ingredient'),
+                'name': ingr.get('ingredientinrecipe__ingredient__name'),
+                'amount': ingr.get('ingredientinrecipe__amount'),
+                'measurement_unit': ingr.get(
+                    'ingredientinrecipe__ingredient__measurement_unit'
+                ),
+            }
+            for ingr in queryset.values(
+                'ingredientinrecipe__ingredient',
+                'ingredientinrecipe__ingredient__name',
+                'ingredientinrecipe__amount',
+                'ingredientinrecipe__ingredient__measurement_unit',
+            )
+        ]
+        prep_data = dict.fromkeys((item.get('id') for item in ingredients))
+        for num, item in enumerate(ingredients):
+            pk = item.get('id')
+            if prep_data.get(pk) is not None:
+                prep_data[pk]['amount'] += item.get('amount')  # type: ignore
+            else:
+                prep_data[pk] = {
+                    'id': pk,
+                    'name': item.get('name'),
+                    'measurement_unit': item.get('measurement_unit'),
+                    'amount': item.get('amount'),
+                }
+        serializer = serializers.CheckListSerializer(
+            data=list(prep_data.values()),
+            many=True,
+        )
+        file_name = (
+            f'recipes_from_shopping_cart.{request.accepted_renderer.format}'
+        )
+        return Response(
+            serializer.data
+            if serializer.is_valid(raise_exception=True)
+            else {},
+            headers={
+                'Content-Disposition': f'attachment; filename="{file_name}"'
+            },
+        )
+
 
 class FavoriteViewSet(
     mixins.CreateModelMixin,
@@ -140,3 +191,10 @@ class FavoriteViewSet(
             recipe=self._recipe,
             owner=self.request.user,
         )
+
+
+class CartViewSet(FavoriteViewSet):
+    serializer_class = serializers.CartSerializer
+
+    def get_queryset(self) -> QuerySet:
+        return self._recipe.cart.all()

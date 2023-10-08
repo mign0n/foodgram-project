@@ -17,5 +17,10 @@ urlpatterns = [
         views.FavoriteViewSet.as_view({'post': 'create', 'delete': 'destroy'}),
         name='favorite',
     ),
+    path(
+        'recipes/<int:recipe_id>/shopping_cart/',
+        views.CartViewSet.as_view({'post': 'create', 'delete': 'destroy'}),
+        name='cart',
+    ),
     path('auth/', include('djoser.urls.authtoken')),
 ]
