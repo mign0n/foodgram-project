@@ -18,7 +18,7 @@ from rest_framework.permissions import (
 )
 from rest_framework.request import Request
 from rest_framework.response import Response
-from rest_framework.serializers import ModelSerializer
+from rest_framework.serializers import ModelSerializer, ValidationError
 
 
 class UserViewSet(UserBaseViewSet):
@@ -191,6 +191,16 @@ class FavoriteViewSet(
             recipe=self._recipe,
             owner=self.request.user,
         )
+
+    def destroy(
+        self,
+        request: Request,
+        *args: tuple,
+        **kwargs: dict,
+    ) -> Response:
+        if not self.get_queryset().filter(owner=self.request.user).exists():
+            raise ValidationError('The object is not exists.')
+        return super().destroy(request, *args, **kwargs)
 
 
 class CartViewSet(FavoriteViewSet):
