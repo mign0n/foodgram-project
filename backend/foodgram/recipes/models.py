@@ -1,6 +1,6 @@
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.core.validators import MinValueValidator
+from django.core.validators import MinValueValidator, RegexValidator
 from django.db import models
 from django.dispatch import receiver
 
@@ -34,6 +34,12 @@ class Tag(models.Model):
         verbose_name='цвет метки',
         max_length=7,
         unique=True,
+        validators=(
+            RegexValidator(
+                regex='^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$',
+                message='Tag color hex code invalid.',
+            ),
+        ),
     )
     slug = models.SlugField(
         verbose_name='слаг',
