@@ -129,7 +129,7 @@ class IngredientInRecipe(models.Model):
 
 
 class CartFavList(models.Model):
-    owner = models.ForeignKey(
+    author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
         verbose_name='владелец списка',
@@ -145,7 +145,7 @@ class CartFavList(models.Model):
         default_related_name = '%(class)s'
         constraints = [
             models.UniqueConstraint(
-                fields=('owner', 'recipe'),
+                fields=('author', 'recipe'),
                 name='unique_%(class)s_recipe',
             ),
         ]
@@ -153,7 +153,7 @@ class CartFavList(models.Model):
     def __str__(self) -> str:
         return (
             f'Рецепт "{self.recipe.name}" в списке {self.__class__.__name__}s '
-            f'пользователя {self.owner}'
+            f'пользователя {self.author}'
         )
 
     def count_list(self) -> int:
@@ -172,7 +172,7 @@ class CartFavList(models.Model):
                 'owner',
                 'recipe',
             )
-            .filter(owner=self.owner, recipe=self.recipe)
+            .filter(author=self.author, recipe=self.recipe)
             .exists()
         )
 

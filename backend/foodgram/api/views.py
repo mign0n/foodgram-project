@@ -1,6 +1,6 @@
 from api import filters, serializers
 from api.filters import RecipeFilterSet
-from api.permissions import IsAuthorOrReadOnly
+from api.permissions import IsAuthor, IsAuthorOrReadOnly
 from api.renderers import CSVRecipeDataRenderer, TextRecipeDataRenderer
 from django.db.models import QuerySet
 from django.utils.functional import cached_property
@@ -119,7 +119,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         renderer_classes=(CSVRecipeDataRenderer, TextRecipeDataRenderer),
     )  # type: ignore
     def download_shopping_cart(self, request: Request) -> Response:
-        queryset = self.get_queryset().filter(cart__owner=request.user)
+        queryset = self.get_queryset().filter(cart__author=request.user)
         ingredients = [
             {
                 'id': ingr.get('ingredientinrecipe__ingredient'),
@@ -170,7 +170,7 @@ class FavoriteViewSet(
     mixins.DestroyModelMixin,
     viewsets.GenericViewSet,
 ):
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (IsAuthenticated, IsAuthor)
     serializer_class = serializers.FavoriteSerializer
     lookup_field = 'recipe_id'
 
@@ -189,7 +189,7 @@ class FavoriteViewSet(
     def perform_create(self, serializer: ModelSerializer) -> None:
         serializer.save(
             recipe=self._recipe,
-            owner=self.request.user,
+            author=self.request.user,
         )
 
     def destroy(
@@ -198,7 +198,7 @@ class FavoriteViewSet(
         *args: tuple,
         **kwargs: dict,
     ) -> Response:
-        if not self.get_queryset().filter(owner=self.request.user).exists():
+        if not self.get_queryset().filter(author=self.request.user).exists():
             raise ValidationError('The object is not exists.')
         return super().destroy(request, *args, **kwargs)
 

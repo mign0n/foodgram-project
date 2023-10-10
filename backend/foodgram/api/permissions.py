@@ -4,6 +4,17 @@ from rest_framework.request import Request
 from rest_framework.viewsets import ModelViewSet
 
 
+class IsAuthor(permissions.BasePermission):
+    def has_object_permission(
+        self,
+        request: Request,
+        view: ModelViewSet,
+        obj: Model,
+    ) -> bool:
+        del view
+        return obj.author == request.user
+
+
 class IsAuthorOrReadOnly(permissions.BasePermission):
     def has_object_permission(
         self,

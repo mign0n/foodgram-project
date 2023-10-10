@@ -305,7 +305,7 @@ class FavoriteSerializer(serializers.ModelSerializer):
         source='recipe.cooking_time',
         required=False,
     )
-    owner = serializers.HiddenField(default=serializers.CurrentUserDefault())
+    author = serializers.HiddenField(default=serializers.CurrentUserDefault())
 
     class Meta:
         model = Favorite
@@ -314,7 +314,7 @@ class FavoriteSerializer(serializers.ModelSerializer):
             'name',
             'image',
             'cooking_time',
-            'owner',
+            'author',
         )
 
     def validate(self, attrs: OrderedDict) -> OrderedDict:
@@ -322,7 +322,7 @@ class FavoriteSerializer(serializers.ModelSerializer):
         if not Recipe.objects.filter(pk=recipe_id).exists():
             raise serializers.ValidationError('The object is not exists.')
         if self.Meta.model.objects.filter(
-            owner__exact=attrs.get('owner'),
+            author__exact=attrs.get('author'),
             recipe__exact=recipe_id,
         ).exists():
             raise serializers.ValidationError(
