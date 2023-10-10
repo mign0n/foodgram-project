@@ -14,6 +14,7 @@ dependencies = [
     "gunicorn",
     "Pillow",
     "psycopg2-binary",
+    "python-dotenv",
 ]
 
 [project.license]

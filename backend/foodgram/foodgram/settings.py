@@ -1,11 +1,15 @@
 import os
 from pathlib import Path
 
+from dotenv import find_dotenv, load_dotenv
+
+load_dotenv(find_dotenv())
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.environ.get(
     'DJANGO_SECRET_KEY',
-    'django-insecure-ilqc=0zv^&=07adyv)@^%yq!=&*ka2w%!dr+u6+ac4ow#3ta9x'
+    'django-insecure-ilqc=0zv^&=07adyv)@^%yq!=&*ka2w%!dr+u6+ac4ow#3ta9x',
 )
 
 DEBUG = os.environ.get('DJANGO_DEBUG', False)

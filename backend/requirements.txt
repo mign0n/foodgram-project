@@ -58,6 +58,8 @@ pyjwt==2.7.0
     # via
     #   djangorestframework-simplejwt
     #   social-auth-core
+python-dotenv==1.0.0
+    # via foodgram (backend/pyproject.toml)
 python3-openid==3.2.0
     # via social-auth-core
 pytz==2023.3

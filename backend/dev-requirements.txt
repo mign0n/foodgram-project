@@ -127,6 +127,8 @@ pytest-django==4.5.2
     # via foodgram (backend/pyproject.toml)
 python-dateutil==2.8.2
     # via faker
+python-dotenv==1.0.0
+    # via foodgram (backend/pyproject.toml)
 python3-openid==3.2.0
     # via social-auth-core
 pytz==2023.3
