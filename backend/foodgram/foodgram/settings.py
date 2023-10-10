@@ -1,14 +1,16 @@
+import os
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = (
+SECRET_KEY = os.environ.get(
+    'DJANGO_SECRET_KEY',
     'django-insecure-ilqc=0zv^&=07adyv)@^%yq!=&*ka2w%!dr+u6+ac4ow#3ta9x'
 )
 
-DEBUG = True
+DEBUG = os.environ.get('DJANGO_DEBUG', False)
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = os.environ.get('DJANGO_HOSTS', '').split()
 
 # fmt: off
 INSTALLED_APPS = [
@@ -63,8 +65,12 @@ WSGI_APPLICATION = 'foodgram.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.getenv('POSTGRES_DB', 'django'),
+        'USER': os.getenv('POSTGRES_USER', 'django'),
+        'PASSWORD': os.getenv('POSTGRES_PASSWORD', ''),
+        'HOST': os.getenv('DB_HOST', ''),
+        'PORT': os.getenv('DB_PORT', 5432),
     }
 }
 
@@ -119,7 +125,8 @@ TIME_ZONE = 'UTC'
 USE_TZ = True
 
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
+STATIC_ROOT = Path(BASE_DIR).joinpath('static').as_posix()
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 

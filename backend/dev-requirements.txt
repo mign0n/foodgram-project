@@ -69,6 +69,8 @@ flake8==6.0.0
     #   foodgram (backend/pyproject.toml)
 flake8-pyproject==1.2.3
     # via foodgram (backend/pyproject.toml)
+gunicorn==21.2.0
+    # via foodgram (backend/pyproject.toml)
 idna==3.4
     # via requests
 iniconfig==2.0.0
@@ -93,6 +95,7 @@ oauthlib==3.2.2
 packaging==23.1
     # via
     #   black
+    #   gunicorn
     #   pytest
 pathspec==0.11.1
     # via black
@@ -102,6 +105,8 @@ platformdirs==3.8.0
     # via black
 pluggy==1.2.0
     # via pytest
+psycopg2-binary==2.9.9
+    # via foodgram (backend/pyproject.toml)
 pycodestyle==2.10.0
     # via flake8
 pycparser==2.21

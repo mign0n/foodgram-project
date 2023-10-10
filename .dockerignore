@@ -1,0 +1,10 @@
+__pycache__
+.env
+venv
+.git
+*/*.sqlite3
+*.egg-info
+.mypy_cache
+.pytest_cache
+postman-collection
+*/media/

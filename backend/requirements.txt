@@ -38,13 +38,19 @@ djangorestframework-simplejwt==5.2.2
     # via djoser
 djoser==2.2.0
     # via foodgram (backend/pyproject.toml)
+gunicorn==21.2.0
+    # via foodgram (backend/pyproject.toml)
 idna==3.4
     # via requests
 oauthlib==3.2.2
     # via
     #   requests-oauthlib
     #   social-auth-core
+packaging==23.2
+    # via gunicorn
 pillow==9.5.0
+    # via foodgram (backend/pyproject.toml)
+psycopg2-binary==2.9.9
     # via foodgram (backend/pyproject.toml)
 pycparser==2.21
     # via cffi

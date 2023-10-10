@@ -11,7 +11,9 @@ dependencies = [
     "djangorestframework",
     "django-filter",
     "djoser",
+    "gunicorn",
     "Pillow",
+    "psycopg2-binary",
 ]
 
 [project.license]
