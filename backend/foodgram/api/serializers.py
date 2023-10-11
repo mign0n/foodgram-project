@@ -230,7 +230,7 @@ class RecipeSerializer(RecipeMinifiedSerializer):
             )
             instance.ingredientinrecipe.set(
                 [
-                    IngredientInRecipe.objects.create(
+                    self._ingredients_in_recipe.create(
                         ingredient=self._ingredients.get(pk=ingredient['id']),
                         amount=ingredient['amount'],
                         recipe=instance,
@@ -242,7 +242,7 @@ class RecipeSerializer(RecipeMinifiedSerializer):
         return instance
 
     def update(self, instance: Model, validated_data: dict) -> Model:
-        request = self.context['request']
+        request_data = self.context['request'].data
 
         if not validated_data.get('ingredientinrecipe'):
             raise serializers.ValidationError(
@@ -256,24 +256,33 @@ class RecipeSerializer(RecipeMinifiedSerializer):
             )
 
         validated_data.pop('ingredientinrecipe')
-        ingredients_ids = []
         with transaction.atomic():
-            for ingredient in request.data.get('ingredients'):
+            for ingredient in request_data.get('ingredients'):
                 (
                     recipe_ingredient,
                     _,
                 ) = self._ingredients_in_recipe.update_or_create(
-                    amount=ingredient['amount'],
-                    ingredient=self._ingredients.get(pk=ingredient['id']),
                     recipe=instance,
-                    defaults=ingredient,
+                    ingredient=self._ingredients.get(pk=ingredient['id']),
+                    defaults={
+                        'amount': ingredient.get('amount'),
+                        'ingredient': self._ingredients.get(
+                            pk=ingredient.get('id')
+                        ),
+                        'recipe': instance,
+                    },
                 )
-                ingredients_ids.append(recipe_ingredient.pk)
-            instance.ingredients.set(ingredients_ids)
-            instance.tags.set(request.data.get('tags', instance.tags))
+
+            tags = validated_data.get('tags')
+            if tags:
+                instance.tags.set(tags)
+                validated_data.pop('tags')
+
+            for key, value in validated_data.items():
+                setattr(instance, key, value)
             instance.save()
 
-        return super().update(instance, validated_data)
+        return instance
 
     def to_representation(self, instance: Model) -> OrderedDict:
         representation = super(
