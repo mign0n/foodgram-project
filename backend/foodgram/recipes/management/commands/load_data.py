@@ -6,9 +6,12 @@ from recipes import models
 
 
 class Command(BaseCommand):
-    def handle(self, *args: tuple, **options: dict) -> None:
+    def handle(self, *args: tuple, **options: dict[str, str]) -> None:
         del args
-        with open(options['file'], encoding='utf-8') as file:
+        with open(
+            options.get('file', ''),
+            encoding='utf-8',
+        ) as file:  # type: ignore
             if not options.get('json'):
                 contents = csv.DictReader(
                     file,
@@ -17,7 +20,7 @@ class Command(BaseCommand):
             else:
                 contents = json.load(file)
             for row in contents:
-                models.Ingredient.objects.get_or_create(**row)
+                models.Ingredient.objects.get_or_create(**row)  # type: ignore
 
     def add_arguments(self, parser: CommandParser) -> None:
         parser.add_argument(
