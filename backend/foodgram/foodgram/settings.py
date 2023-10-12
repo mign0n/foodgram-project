@@ -33,6 +33,9 @@ INSTALLED_APPS = [
     'api.apps.ApiConfig',
     'recipes.apps.RecipesConfig',
     'users.apps.UsersConfig',
+
+    'drf_spectacular',
+    'drf_spectacular_sidecar',
 ]
 # fmt: on
 
@@ -103,6 +106,7 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework.authentication.TokenAuthentication',
     ),
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 }
 
 DJOSER = {
@@ -118,6 +122,20 @@ DJOSER = {
         'user_me': ['rest_framework.permissions.IsAuthenticated'],
         'user_list': ['rest_framework.permissions.IsAuthenticatedOrReadOnly'],
     },
+}
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'Foodgram API',
+    'DESCRIPTION': (
+        'Продуктовый помощник позволяет в один клик собрать список'
+        ' покупок для приготовления блюд по предварительно '
+        'выбранным рецептам.'
+    ),
+    'VERSION': '0.0.1',
+    'SERVE_INCLUDE_SCHEMA': False,
+    'SWAGGER_UI_DIST': 'SIDECAR',
+    'SWAGGER_UI_FAVICON_HREF': 'SIDECAR',
+    'REDOC_DIST': 'SIDECAR',
 }
 
 AUTH_USER_MODEL = 'users.CustomUser'

@@ -11,6 +11,8 @@ dependencies = [
     "djangorestframework",
     "django-filter",
     "djoser",
+    "drf-spectacular",
+    "drf-spectacular[sidecar]",
     "gunicorn",
     "Pillow",
     "psycopg2-binary",

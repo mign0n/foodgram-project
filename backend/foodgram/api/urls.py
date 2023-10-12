@@ -1,5 +1,6 @@
 from api import views
 from django.urls import include, path
+from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 from rest_framework.routers import SimpleRouter
 
 app_name = '%(app_label)s'
@@ -23,4 +24,10 @@ urlpatterns = [
         name='cart',
     ),
     path('auth/', include('djoser.urls.authtoken')),
+    path('docs/schema/', SpectacularAPIView.as_view(), name='schema'),
+    path(
+        'docs/swagger-ui/',
+        SpectacularSwaggerView.as_view(url_name='api:schema'),
+        name='swagger-ui',
+    ),
 ]

@@ -8,6 +8,10 @@ application-properties==0.6.0
     # via pymarkdownlnt
 asgiref==3.7.2
     # via django
+attrs==23.1.0
+    # via
+    #   jsonschema
+    #   referencing
 black==23.3.0
     # via foodgram (backend/pyproject.toml)
 certifi==2023.5.7
@@ -35,6 +39,8 @@ django==4.2.2
     #   djangorestframework
     #   djangorestframework-simplejwt
     #   djoser
+    #   drf-spectacular
+    #   drf-spectacular-sidecar
     #   foodgram (backend/pyproject.toml)
     #   social-auth-app-django
 django-filter==23.3
@@ -52,11 +58,16 @@ django-testdata==1.0.3
 djangorestframework==3.14.0
     # via
     #   djangorestframework-simplejwt
+    #   drf-spectacular
     #   foodgram (backend/pyproject.toml)
 djangorestframework-simplejwt==5.2.2
     # via djoser
 djoser==2.2.0
     # via foodgram (backend/pyproject.toml)
+drf-spectacular[sidecar]==0.26.5
+    # via foodgram (backend/pyproject.toml)
+drf-spectacular-sidecar==2023.10.1
+    # via drf-spectacular
 exceptiongroup==1.1.1
     # via pytest
 factory-boy==3.2.1
@@ -73,10 +84,16 @@ gunicorn==21.2.0
     # via foodgram (backend/pyproject.toml)
 idna==3.4
     # via requests
+inflection==0.5.1
+    # via drf-spectacular
 iniconfig==2.0.0
     # via pytest
 isort==5.12.0
     # via foodgram (backend/pyproject.toml)
+jsonschema==4.19.1
+    # via drf-spectacular
+jsonschema-specifications==2023.7.1
+    # via jsonschema
 mccabe==0.7.0
     # via flake8
 mypy==1.4.0
@@ -133,12 +150,22 @@ python3-openid==3.2.0
     # via social-auth-core
 pytz==2023.3
     # via djangorestframework
+pyyaml==6.0.1
+    # via drf-spectacular
+referencing==0.30.2
+    # via
+    #   jsonschema
+    #   jsonschema-specifications
 requests==2.31.0
     # via
     #   requests-oauthlib
     #   social-auth-core
 requests-oauthlib==1.3.1
     # via social-auth-core
+rpds-py==0.10.4
+    # via
+    #   jsonschema
+    #   referencing
 six==1.16.0
     # via python-dateutil
 social-auth-app-django==5.2.0
@@ -168,6 +195,8 @@ typing-extensions==4.5.0
     #   django-stubs-ext
     #   mypy
     #   pymarkdownlnt
+uritemplate==4.1.1
+    # via drf-spectacular
 urllib3==2.0.3
     # via requests
 wcwidth==0.2.6

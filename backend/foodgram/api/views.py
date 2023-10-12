@@ -86,14 +86,14 @@ class UserViewSet(UserBaseViewSet):
 
 class TagViewSet(viewsets.ReadOnlyModelViewSet):
     pagination_class = None
-    permission_classes = [IsAuthenticatedOrReadOnly]
+    permission_classes = (IsAuthenticatedOrReadOnly,)
     queryset = Tag.objects.all().order_by('id')
     serializer_class = serializers.TagSerializer
 
 
 class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
     pagination_class = None
-    permission_classes = [IsAuthenticatedOrReadOnly]
+    permission_classes = (IsAuthenticatedOrReadOnly,)
     queryset = Ingredient.objects.all().order_by('id')
     serializer_class = serializers.IngredientSerializer
     filter_backends = (filters.IngredientSearchFilter,)
@@ -170,7 +170,7 @@ class FavoriteViewSet(
     mixins.DestroyModelMixin,
     viewsets.GenericViewSet,
 ):
-    permission_classes = (IsAuthenticated, IsAuthor)
+    permission_classes = (IsAuthor,)
     serializer_class = serializers.FavoriteSerializer
     lookup_field = 'recipe_id'
 

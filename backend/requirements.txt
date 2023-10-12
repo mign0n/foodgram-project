@@ -6,6 +6,10 @@
 #
 asgiref==3.7.2
     # via django
+attrs==23.1.0
+    # via
+    #   jsonschema
+    #   referencing
 certifi==2023.5.7
     # via requests
 cffi==1.15.1
@@ -24,6 +28,8 @@ django==4.2.2
     #   djangorestframework
     #   djangorestframework-simplejwt
     #   djoser
+    #   drf-spectacular
+    #   drf-spectacular-sidecar
     #   foodgram (backend/pyproject.toml)
     #   social-auth-app-django
 django-filter==23.3
@@ -33,15 +39,26 @@ django-templated-mail==1.1.1
 djangorestframework==3.14.0
     # via
     #   djangorestframework-simplejwt
+    #   drf-spectacular
     #   foodgram (backend/pyproject.toml)
 djangorestframework-simplejwt==5.2.2
     # via djoser
 djoser==2.2.0
     # via foodgram (backend/pyproject.toml)
+drf-spectacular[sidecar]==0.26.5
+    # via foodgram (backend/pyproject.toml)
+drf-spectacular-sidecar==2023.10.1
+    # via drf-spectacular
 gunicorn==21.2.0
     # via foodgram (backend/pyproject.toml)
 idna==3.4
     # via requests
+inflection==0.5.1
+    # via drf-spectacular
+jsonschema==4.19.1
+    # via drf-spectacular
+jsonschema-specifications==2023.7.1
+    # via jsonschema
 oauthlib==3.2.2
     # via
     #   requests-oauthlib
@@ -64,12 +81,22 @@ python3-openid==3.2.0
     # via social-auth-core
 pytz==2023.3
     # via djangorestframework
+pyyaml==6.0.1
+    # via drf-spectacular
+referencing==0.30.2
+    # via
+    #   jsonschema
+    #   jsonschema-specifications
 requests==2.31.0
     # via
     #   requests-oauthlib
     #   social-auth-core
 requests-oauthlib==1.3.1
     # via social-auth-core
+rpds-py==0.10.4
+    # via
+    #   jsonschema
+    #   referencing
 social-auth-app-django==5.2.0
     # via djoser
 social-auth-core==4.4.2
@@ -78,5 +105,7 @@ sqlparse==0.4.4
     # via django
 typing-extensions==4.6.3
     # via asgiref
+uritemplate==4.1.1
+    # via drf-spectacular
 urllib3==2.0.3
     # via requests
