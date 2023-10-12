@@ -135,14 +135,8 @@ class RecipeSerializer(RecipeMinifiedSerializer):
         source='ingredientinrecipe',
         many=True,
     )
-    is_favorited = serializers.BooleanField(
-        source='favorite_count',
-        read_only=True,
-    )
-    is_in_shopping_cart = serializers.BooleanField(
-        source='in_shopping_cart_count',
-        read_only=True,
-    )
+    is_favorited = serializers.SerializerMethodField(read_only=True)
+    is_in_shopping_cart = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = Recipe
@@ -175,6 +169,22 @@ class RecipeSerializer(RecipeMinifiedSerializer):
     @cached_property
     def _tags(self) -> QuerySet:
         return Tag.objects.all()
+
+    def get_is_favorited(self, obj) -> bool:
+        return (
+            True
+            if obj.favorite.filter(
+                author=self.context['request'].user
+            ).exists()
+            else False
+        )
+
+    def get_is_in_shopping_cart(self, obj) -> bool:
+        return (
+            True
+            if obj.cart.filter(author=self.context['request'].user).exists()
+            else False
+        )
 
     def validate_ingredients(
         self,
