@@ -1,6 +1,6 @@
 WORKDIR = backend
 VENV = $(WORKDIR)/venv
-MANAGE = python $(WORKDIR)/manage.py
+MANAGE = python $(WORKDIR)/foodgram/manage.py
 DEVREQS = dev-requirements.txt
 REQS = requirements.txt
 
@@ -18,7 +18,7 @@ install-dev-deps: install-deps dev-deps
 	pip-sync $(WORKDIR)/$(DEVREQS)
 
 run:
-	VENV/bin/$(MANAGE) runserver
+	$(VENV)/bin/$(MANAGE) runserver
 
 style:
 	black $(WORKDIR)
@@ -29,3 +29,9 @@ style:
 
 test:
 	pytest -c $(WORKDIR)/pyproject.toml
+
+install:
+	python -m venv venv
+	$(VENV)/bin/pip install --upgrade pip
+	$(VENV)/bin/pip install -r $(DEVREQS)
+	$(VENV)/bin/$(MANAGE) migrate
