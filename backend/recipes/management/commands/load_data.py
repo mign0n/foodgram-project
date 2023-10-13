@@ -9,9 +9,9 @@ class Command(BaseCommand):
     def handle(self, *args: tuple, **options: dict[str, str]) -> None:
         del args
         with open(
-            options.get('file', ''),
+            options.get('file', ''),  # type: ignore
             encoding='utf-8',
-        ) as file:  # type: ignore
+        ) as file:
             if not options.get('json'):
                 contents = csv.DictReader(
                     file,

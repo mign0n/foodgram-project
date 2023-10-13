@@ -72,7 +72,7 @@
    ```shell
    sudo docker compose exec backend python manage.py migrate
    sudo docker compose exec backend python manage.py collectstatic
-   sudo docker compose exec backend cp -r /app/foodgram/static/. /backend_static/static/
+   sudo docker compose exec backend cp -r /app/static/. /backend_static/static/
    ```
 
 6. Создайте суперпользователя django

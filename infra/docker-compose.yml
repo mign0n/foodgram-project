@@ -16,7 +16,7 @@ services:
   backend:
     build:
       context: ../backend
-      dockerfile: foodgram/Dockerfile
+      dockerfile: Dockerfile
     env_file: ../.env
     depends_on:
       db:

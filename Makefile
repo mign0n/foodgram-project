@@ -1,6 +1,6 @@
 WORKDIR = backend
 VENV = $(WORKDIR)/venv
-MANAGE = python $(WORKDIR)/foodgram/manage.py
+MANAGE = python $(WORKDIR)/manage.py
 DEVREQS = dev-requirements.txt
 REQS = requirements.txt
 
