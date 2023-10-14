@@ -9,20 +9,20 @@ services:
 
   db:
     image: postgres:15.4
-    env_file: ../.env
+    env_file: .env
     volumes:
       - foodgram_data:/var/lib/postgresql/data
 
   backend:
     image: mign0n/backend_foodgram
-    env_file: ../.env
+    env_file: .env
     depends_on:
       db:
         condition: service_started
     volumes:
       - static:/backend_static
       - media:/app/foodgram/media
-      - ../data:/app/data/
+      - ./data:/app/data/
 
   frontend:
     image: mign0n/frontend_foodgram

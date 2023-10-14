@@ -1,9 +1,9 @@
 __pycache__
 .env
-venv
+*/venv
 .git
 */*.sqlite3
-*.egg-info
+*/*.egg-info
 .mypy_cache
 .pytest_cache
 postman-collection

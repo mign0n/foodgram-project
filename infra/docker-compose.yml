@@ -37,7 +37,7 @@ services:
   nginx:
     build: .
     ports:
-      - "80:80"
+      - "9000:80"
     depends_on:
       backend:
         condition: service_started
