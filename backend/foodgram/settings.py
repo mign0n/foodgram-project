@@ -16,6 +16,8 @@ DEBUG = os.environ.get('DJANGO_DEBUG', False)
 
 ALLOWED_HOSTS = os.environ.get('DJANGO_HOSTS', '').split()
 
+CSRF_TRUSTED_ORIGINS = ALLOWED_HOSTS
+
 # fmt: off
 INSTALLED_APPS = [
     'django.contrib.admin',
