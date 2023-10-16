@@ -23,7 +23,7 @@ services:
         condition: service_started
     volumes:
       - static:/backend_static
-      - media:/app/foodgram/media
+      - media:/app/media
       - ../data:/app/data/
 
   frontend:
@@ -45,4 +45,4 @@ services:
         condition: service_completed_successfully
     volumes:
       - static:/staticfiles
-      - media:/app/foodgram/media
+      - media:/app/media

@@ -21,7 +21,7 @@ services:
         condition: service_started
     volumes:
       - static:/backend_static
-      - media:/app/foodgram/media
+      - media:/app/media
       - ./data:/app/data/
 
   frontend:
@@ -33,7 +33,7 @@ services:
   nginx:
     image: mign0n/gateway_foodgram
     ports:
-      - "80:80"
+      - "9000:80"
     depends_on:
       backend:
         condition: service_started
@@ -41,4 +41,4 @@ services:
         condition: service_completed_successfully
     volumes:
       - static:/staticfiles
-      - media:/app/foodgram/media
+      - media:/app/media
