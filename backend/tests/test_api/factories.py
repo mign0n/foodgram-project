@@ -1,8 +1,9 @@
 from factory import RelatedFactory, SubFactory, post_generation
 from factory.django import DjangoModelFactory
 from factory.faker import Faker
-from recipes.models import Ingredient, IngredientInRecipe, Recipe, Tag, User
 from tests.utils import generate_base64_image_string
+
+from recipes.models import Ingredient, IngredientInRecipe, Recipe, Tag, User
 
 
 class UserFactory(DjangoModelFactory):

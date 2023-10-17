@@ -66,6 +66,7 @@ profile = "black"
 line_length = 79
 src_paths = "backend"
 extend_skip = ["migrations"]
+known_first_party = ["api", "foodgram", "recipes", "users"]
 
 [tool.mypy]
 python_version = "3.9"

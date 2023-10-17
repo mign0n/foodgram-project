@@ -6,6 +6,7 @@ from django.db.models import Model, QuerySet
 from django.utils.functional import cached_property
 from djoser.serializers import UserCreateSerializer as UserCreateBaseSerializer
 from djoser.serializers import UserSerializer as UserBaseSerializer
+from rest_framework import serializers
 
 from api.fields import Base64ImageField
 from recipes.models import (
@@ -17,7 +18,6 @@ from recipes.models import (
     Subscribe,
     Tag,
 )
-from rest_framework import serializers
 
 EXTRA_FIELDS = (
     'username',

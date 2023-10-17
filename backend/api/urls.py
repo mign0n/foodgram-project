@@ -1,7 +1,8 @@
-from api import views
 from django.urls import include, path
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 from rest_framework.routers import SimpleRouter
+
+from api import views
 
 app_name = '%(app_label)s'
 

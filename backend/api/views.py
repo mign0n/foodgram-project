@@ -1,13 +1,8 @@
-from api import filters, serializers
-from api.filters import RecipeFilterSet
-from api.permissions import IsAuthor, IsAuthorOrReadOnly
-from api.renderers import CSVRecipeDataRenderer, TextRecipeDataRenderer
 from django.db.models import QuerySet
 from django.utils.functional import cached_property
 from django_filters.rest_framework import DjangoFilterBackend
 from djoser.conf import settings
 from djoser.views import UserViewSet as UserBaseViewSet
-from recipes.models import Ingredient, Recipe, Tag, User
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.generics import get_object_or_404
@@ -18,6 +13,12 @@ from rest_framework.permissions import (
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.serializers import ModelSerializer, ValidationError
+
+from api import filters, serializers
+from api.filters import RecipeFilterSet
+from api.permissions import IsAuthor, IsAuthorOrReadOnly
+from api.renderers import CSVRecipeDataRenderer, TextRecipeDataRenderer
+from recipes.models import Ingredient, Recipe, Tag, User
 
 
 class UserViewSet(UserBaseViewSet):
