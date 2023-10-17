@@ -1,13 +1,13 @@
-import base64
 from typing import OrderedDict
 
 from django.contrib.auth.models import AbstractUser
-from django.core.files.base import ContentFile
 from django.db import transaction
 from django.db.models import Model, QuerySet
 from django.utils.functional import cached_property
 from djoser.serializers import UserCreateSerializer as UserCreateBaseSerializer
 from djoser.serializers import UserSerializer as UserBaseSerializer
+
+from api.fields import Base64ImageField
 from recipes.models import (
     Cart,
     Favorite,
@@ -24,15 +24,6 @@ EXTRA_FIELDS = (
     'first_name',
     'last_name',
 )
-
-
-class Base64ImageField(serializers.ImageField):
-    def to_internal_value(self, data):
-        if isinstance(data, str) and data.startswith('data:image'):
-            img_format, img_str = data.split(';base64,')
-            _, ext = img_format.split('/')
-            data = ContentFile(base64.b64decode(img_str), name='temp.' + ext)
-        return super().to_internal_value(data)
 
 
 class RecipeMinifiedSerializer(serializers.ModelSerializer):
