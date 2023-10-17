@@ -11,7 +11,6 @@ class IsAuthor(permissions.BasePermission):
         view: ModelViewSet,
         obj: Model,
     ) -> bool:
-        del view
         return obj.author == request.user
 
 
@@ -22,7 +21,6 @@ class IsAuthorOrReadOnly(permissions.BasePermission):
         view: ModelViewSet,
         obj: Model,
     ) -> bool:
-        del view
         return bool(
             request.method in permissions.SAFE_METHODS
             or obj.author == request.user,
