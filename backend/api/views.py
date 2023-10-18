@@ -65,11 +65,7 @@ class UserViewSet(UserBaseViewSet):
             context={'request': self.request},
         )
 
-        if not serializer.is_valid():
-            return Response(
-                serializer.errors,
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+        serializer.is_valid(raise_exception=True)
         if request.method == 'POST':
             serializer.save(**serializer.validated_data)
             return Response(
@@ -79,9 +75,8 @@ class UserViewSet(UserBaseViewSet):
                 ).data,
                 status=status.HTTP_201_CREATED,
             )
-        if request.method == 'DELETE':
-            author.subscribe.filter(**serializer.data).delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
+        author.subscribe.filter(**serializer.data).delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class TagViewSet(viewsets.ReadOnlyModelViewSet):

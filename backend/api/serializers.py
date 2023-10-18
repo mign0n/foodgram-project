@@ -51,7 +51,9 @@ class UsersSerializer(UserBaseSerializer):
         )
 
     def get_is_subscribed(self, obj: AbstractUser) -> bool:
-        return obj.subscribe.exists()
+        return obj.subscribe.filter(
+            user=self.context['request'].user.pk
+        ).exists()
 
 
 class UserCreateSerializer(UserCreateBaseSerializer):
@@ -90,8 +92,8 @@ class IngredientSerializer(serializers.ModelSerializer):
 
 class IngredientInRecipeSerializer(serializers.ModelSerializer):
     id = serializers.PrimaryKeyRelatedField(
-        source='ingredient_id',
-        read_only=True,
+        source='ingredient',
+        queryset=Ingredient.objects.all(),
     )
     name = serializers.CharField(
         source='ingredient.get.name',
@@ -162,20 +164,12 @@ class RecipeSerializer(RecipeMinifiedSerializer):
         return Tag.objects.all()
 
     def get_is_favorited(self, obj) -> bool:
-        return (
-            True
-            if obj.favorite.filter(
-                author=self.context['request'].user
-            ).exists()
-            else False
-        )
+        return obj.favorite.filter(
+            author=self.context['request'].user.pk
+        ).exists()
 
     def get_is_in_shopping_cart(self, obj) -> bool:
-        return (
-            True
-            if obj.cart.filter(author=self.context['request'].user).exists()
-            else False
-        )
+        return obj.cart.filter(author=self.context['request'].user.pk).exists()
 
     def validate_ingredients(
         self,
@@ -187,20 +181,20 @@ class RecipeSerializer(RecipeMinifiedSerializer):
                 'created.'
             )
 
-        ingredients = self.initial_data.get('ingredients')
+        ingredients = [
+            recipeingredient['ingredient'] for recipeingredient in value
+        ]
         if len(value) > len(
-            set([ingredient.get('id') for ingredient in ingredients])
+            set([ingredient.pk for ingredient in ingredients])
         ):
             raise serializers.ValidationError(
                 'Repeating ingredients in the same recipe is unacceptable.'
             )
 
-        for ingredient in ingredients:
-            ingredient_id = ingredient.get('id')
-            if not self._ingredients.filter(pk=ingredient_id).exists():
-                raise serializers.ValidationError(
-                    f'The ingredient with id={ingredient_id} does not exists.'
-                )
+        if not self._ingredients.filter(pk__in=ingredients).exists():
+            raise serializers.ValidationError(
+                'The ingredient does not exists.'
+            )
         return value
 
     def validate_tags(
@@ -332,8 +326,8 @@ class FavoriteSerializer(serializers.ModelSerializer):
         if not Recipe.objects.filter(pk=recipe_id).exists():
             raise serializers.ValidationError('The object is not exists.')
         if self.Meta.model.objects.filter(
-            author__exact=attrs.get('author'),
-            recipe__exact=recipe_id,
+            author=attrs.get('author'),
+            recipe=recipe_id,
         ).exists():
             raise serializers.ValidationError(
                 'The fields owner, recipe must make a unique set.'
@@ -379,19 +373,19 @@ class SubscribeSerializer(serializers.ModelSerializer):
 
     def validate_author(self, value: AbstractUser) -> AbstractUser:
         request = self.context.get('request')
-        queryset = self.Meta.model.objects.filter(
-            author__exact=value,
-            user__exact=request.user,
-        )
+        subscribe_is_exists = self.Meta.model.objects.filter(
+            author=value,
+            user=request.user,
+        ).exists()
         if value == request.user:
             raise serializers.ValidationError(
                 'You can not subscribe to yourself.'
             )
-        if request.method != 'DELETE' and queryset.exists():
+        if request.method != 'DELETE' and subscribe_is_exists:
             raise serializers.ValidationError(
                 'The fields author, user must make a unique set.'
             )
-        if request.method == 'DELETE' and not queryset.exists():
+        if request.method == 'DELETE' and not subscribe_is_exists:
             raise serializers.ValidationError('The object is not exists.')
         return value
 
