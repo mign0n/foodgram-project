@@ -1,6 +1,8 @@
 from django.contrib import admin
+from django.db.models import Model
 
 from recipes import models
+from recipes.models import Favorite
 
 
 @admin.register(models.Cart)
@@ -43,13 +45,15 @@ class RecipeAdmin(admin.ModelAdmin):
         'name',
         'author',
         'favorite_count',
-        'in_shopping_cart_count',
     )
     list_filter = (
         'author',
         'name',
         'tags',
     )
+
+    def favorite_count(self, instance: Model) -> int:
+        return Favorite.objects.filter(recipe=instance).count()
 
 
 @admin.register(models.Subscribe)

@@ -2,7 +2,6 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.validators import MinValueValidator, RegexValidator
 from django.db import models
-from django.dispatch import receiver
 
 User = get_user_model()
 
@@ -83,16 +82,6 @@ class Recipe(models.Model):
     )
     tags = models.ManyToManyField(Tag, verbose_name='список меток')
     text = models.TextField(verbose_name='описание рецепта')
-    is_favorited = models.BooleanField(
-        verbose_name='рецепт в списке избранных',
-        default=False,
-    )
-    is_in_shopping_cart = models.BooleanField(
-        verbose_name='рецепт в списке покупок',
-        default=False,
-    )
-    favorite_count = models.IntegerField(default=0, blank=True)
-    in_shopping_cart_count = models.IntegerField(default=0, blank=True)
 
     class Meta:
         ordering = ('-pub_date',)
@@ -120,6 +109,12 @@ class IngredientInRecipe(models.Model):
 
     class Meta:
         default_related_name = '%(class)s'
+        constraints = [
+            models.UniqueConstraint(
+                fields=('ingredient', 'recipe'),
+                name='unique_%(class)s',
+            ),
+        ]
 
     def __str__(self) -> str:
         return (
@@ -154,26 +149,6 @@ class CartFavList(models.Model):
         return (
             f'Рецепт "{self.recipe.name}" в списке {self.__class__.__name__}s '
             f'пользователя {self.author}'
-        )
-
-    def count_list(self) -> int:
-        return (
-            self.__class__.objects.select_related(
-                'owner',
-                'recipe',
-            )
-            .filter(recipe=self.recipe)
-            .count()
-        )
-
-    def is_in_list(self) -> bool:
-        return (
-            self.__class__.objects.select_related(
-                'owner',
-                'recipe',
-            )
-            .filter(author=self.author, recipe=self.recipe)
-            .exists()
         )
 
 
@@ -213,37 +188,3 @@ class Subscribe(models.Model):
 
     def __str__(self) -> str:
         return f'{self.user} подписан на {self.author}'
-
-
-@receiver(
-    [
-        models.signals.post_save,
-        models.signals.post_delete,
-    ],
-    sender=Favorite,
-)
-def update_favorite(instance: CartFavList, **kwargs) -> None:
-    del kwargs
-    Recipe.objects.filter(
-        pk=instance.recipe.pk,
-    ).update(
-        is_favorited=instance.is_in_list(),
-        favorite_count=instance.count_list(),
-    )
-
-
-@receiver(
-    [
-        models.signals.post_save,
-        models.signals.post_delete,
-    ],
-    sender=Cart,
-)
-def update_in_cart(instance: CartFavList, **kwargs) -> None:
-    del kwargs
-    Recipe.objects.filter(
-        pk=instance.recipe.pk,
-    ).update(
-        is_in_shopping_cart=instance.is_in_list(),
-        in_shopping_cart_count=instance.count_list(),
-    )
