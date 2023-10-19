@@ -8,7 +8,7 @@ from rest_framework.decorators import action
 from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import (
     BasePermission,
-    IsAuthenticatedOrReadOnly,
+    IsAuthenticatedOrReadOnly, IsAuthenticated,
 )
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -165,7 +165,7 @@ class FavoriteViewSet(
     mixins.DestroyModelMixin,
     viewsets.GenericViewSet,
 ):
-    permission_classes = (IsAuthor,)
+    permission_classes = (IsAuthor, IsAuthenticated)
     serializer_class = serializers.FavoriteSerializer
     lookup_field = 'recipe_id'
 

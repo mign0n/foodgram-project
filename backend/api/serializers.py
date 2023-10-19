@@ -117,6 +117,12 @@ class IngredientInRecipeSerializer(serializers.ModelSerializer):
             'recipe',
         )
 
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        representation['name'] = instance.ingredient.name
+        representation['measurement_unit'] = instance.ingredient.measurement_unit
+        return representation
+
 
 class RecipeSerializer(RecipeMinifiedSerializer):
     tags = serializers.PrimaryKeyRelatedField(
@@ -181,17 +187,15 @@ class RecipeSerializer(RecipeMinifiedSerializer):
                 'created.'
             )
 
-        ingredients = [
-            recipeingredient['ingredient'] for recipeingredient in value
+        ingredients_ids = [
+            recipeingredient['ingredient'].pk for recipeingredient in value
         ]
-        if len(value) > len(
-            set([ingredient.pk for ingredient in ingredients])
-        ):
+        if len(value) > len(set(ingredients_ids)):
             raise serializers.ValidationError(
                 'Repeating ingredients in the same recipe is unacceptable.'
             )
 
-        if not self._ingredients.filter(pk__in=ingredients).exists():
+        if not self._ingredients.filter(pk__in=ingredients_ids).exists():
             raise serializers.ValidationError(
                 'The ingredient does not exists.'
             )
@@ -214,6 +218,19 @@ class RecipeSerializer(RecipeMinifiedSerializer):
 
         return value
 
+    def validate(self, attrs: OrderedDict) -> OrderedDict:
+        if not attrs.get('ingredientinrecipe'):
+            raise serializers.ValidationError(
+                'The "ingredients" field must be present when the recipe is '
+                'updated.'
+            )
+
+        if not attrs.get('tags'):
+            raise serializers.ValidationError(
+                'The "tags" field must be present when the recipe is updated.'
+            )
+        return attrs
+
     def create(self, validated_data: dict) -> Model:
         request = self.context['request']
         tags = validated_data.pop('tags')
@@ -226,7 +243,7 @@ class RecipeSerializer(RecipeMinifiedSerializer):
             instance.ingredientinrecipe.set(
                 [
                     self._ingredients_in_recipe.create(
-                        ingredient=self._ingredients.get(pk=ingredient['id']),
+                        ingredient_id=ingredient['id'],
                         amount=ingredient['amount'],
                         recipe=instance,
                     )
@@ -239,17 +256,6 @@ class RecipeSerializer(RecipeMinifiedSerializer):
     def update(self, instance: Model, validated_data: dict) -> Model:
         request_data = self.context['request'].data
 
-        if not validated_data.get('ingredientinrecipe'):
-            raise serializers.ValidationError(
-                'The "ingredients" field must be present when the recipe is '
-                'updated.'
-            )
-
-        if not validated_data.get('tags'):
-            raise serializers.ValidationError(
-                'The "tags" field must be present when the recipe is updated.'
-            )
-
         validated_data.pop('ingredientinrecipe')
         with transaction.atomic():
             for ingredient in request_data.get('ingredients'):
@@ -258,12 +264,10 @@ class RecipeSerializer(RecipeMinifiedSerializer):
                     _,
                 ) = self._ingredients_in_recipe.update_or_create(
                     recipe=instance,
-                    ingredient=self._ingredients.get(pk=ingredient['id']),
+                    ingredient_id=ingredient['id'],
                     defaults={
                         'amount': ingredient.get('amount'),
-                        'ingredient': self._ingredients.get(
-                            pk=ingredient.get('id')
-                        ),
+                        'ingredient_id': ingredient.get('id'),
                         'recipe': instance,
                     },
                 )
@@ -273,27 +277,10 @@ class RecipeSerializer(RecipeMinifiedSerializer):
                 instance.tags.set(tags)
                 validated_data.pop('tags')
 
-            for key, value in validated_data.items():
-                setattr(instance, key, value)
-            instance.save()
-
-        return instance
+        return super().update(instance, validated_data)
 
     def to_representation(self, instance: Model) -> OrderedDict:
-        representation = super(
-            RecipeSerializer,
-            self,
-        ).to_representation(instance)
-        representation['ingredients'] = [
-            {**ingredient, **amount}
-            for ingredient, amount in zip(
-                IngredientSerializer(
-                    instance.ingredients.all(),
-                    many=True,
-                ).data,
-                representation.pop('ingredients'),
-            )
-        ]
+        representation = super().to_representation(instance)
         representation['tags'] = TagSerializer(
             instance.tags.all(),
             many=True,
