@@ -120,7 +120,9 @@ class IngredientInRecipeSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         representation = super().to_representation(instance)
         representation['name'] = instance.ingredient.name
-        representation['measurement_unit'] = instance.ingredient.measurement_unit
+        representation[
+            'measurement_unit'
+        ] = instance.ingredient.measurement_unit
         return representation
 
 
@@ -384,10 +386,12 @@ class CartSerializer(FavoriteSerializer):
 
 
 class CheckListSerializer(serializers.Serializer):
-    id = serializers.IntegerField()
-    name = serializers.CharField()
-    measurement_unit = serializers.CharField()
-    amount = serializers.IntegerField()
+    id = serializers.IntegerField(source='ingredientinrecipe__ingredient')
+    name = serializers.CharField(source='ingredientinrecipe__ingredient__name')
+    measurement_unit = serializers.CharField(
+        source='ingredientinrecipe__ingredient__measurement_unit',
+    )
+    amount = serializers.IntegerField(source='total_amount')
 
     class Meta:
         fields = (

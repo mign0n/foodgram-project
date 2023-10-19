@@ -1,4 +1,4 @@
-from django.db.models import QuerySet
+from django.db.models import QuerySet, Sum
 from django.utils.functional import cached_property
 from django_filters.rest_framework import DjangoFilterBackend
 from djoser.conf import settings
@@ -8,7 +8,8 @@ from rest_framework.decorators import action
 from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import (
     BasePermission,
-    IsAuthenticatedOrReadOnly, IsAuthenticated,
+    IsAuthenticated,
+    IsAuthenticatedOrReadOnly,
 )
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -115,45 +116,21 @@ class RecipeViewSet(viewsets.ModelViewSet):
     )  # type: ignore
     def download_shopping_cart(self, request: Request) -> Response:
         queryset = self.get_queryset().filter(cart__author=request.user)
-        ingredients = [
-            {
-                'id': ingr.get('ingredientinrecipe__ingredient'),
-                'name': ingr.get('ingredientinrecipe__ingredient__name'),
-                'amount': ingr.get('ingredientinrecipe__amount'),
-                'measurement_unit': ingr.get(
-                    'ingredientinrecipe__ingredient__measurement_unit'
-                ),
-            }
-            for ingr in queryset.values(
+        serializer = serializers.CheckListSerializer(
+            queryset.values(
                 'ingredientinrecipe__ingredient',
                 'ingredientinrecipe__ingredient__name',
-                'ingredientinrecipe__amount',
                 'ingredientinrecipe__ingredient__measurement_unit',
             )
-        ]
-        prep_data = dict.fromkeys((item.get('id') for item in ingredients))
-        for num, item in enumerate(ingredients):
-            pk = item.get('id')
-            if prep_data.get(pk) is not None:
-                prep_data[pk]['amount'] += item.get('amount')  # type: ignore
-            else:
-                prep_data[pk] = {
-                    'id': pk,
-                    'name': item.get('name'),
-                    'measurement_unit': item.get('measurement_unit'),
-                    'amount': item.get('amount'),
-                }
-        serializer = serializers.CheckListSerializer(
-            data=list(prep_data.values()),
+            .order_by('ingredientinrecipe__ingredient')
+            .annotate(total_amount=Sum('ingredientinrecipe__amount')),
             many=True,
         )
         file_name = (
             f'recipes_from_shopping_cart.{request.accepted_renderer.format}'
         )
         return Response(
-            serializer.data
-            if serializer.is_valid(raise_exception=True)
-            else {},
+            serializer.data,
             headers={
                 'Content-Disposition': f'attachment; filename="{file_name}"'
             },
