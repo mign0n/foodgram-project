@@ -96,11 +96,11 @@ class IngredientInRecipeSerializer(serializers.ModelSerializer):
         queryset=Ingredient.objects.all(),
     )
     name = serializers.CharField(
-        source='ingredient.get.name',
+        source='ingredient.name',
         read_only=True,
     )
     measurement_unit = serializers.CharField(
-        source='ingredient.get.measurement_unit',
+        source='ingredient.measurement_unit',
         read_only=True,
     )
 
@@ -116,14 +116,6 @@ class IngredientInRecipeSerializer(serializers.ModelSerializer):
             'id',
             'recipe',
         )
-
-    def to_representation(self, instance):
-        representation = super().to_representation(instance)
-        representation['name'] = instance.ingredient.name
-        representation[
-            'measurement_unit'
-        ] = instance.ingredient.measurement_unit
-        return representation
 
 
 class RecipeSerializer(RecipeMinifiedSerializer):
@@ -179,20 +171,19 @@ class RecipeSerializer(RecipeMinifiedSerializer):
     def get_is_in_shopping_cart(self, obj) -> bool:
         return obj.cart.filter(author=self.context['request'].user.pk).exists()
 
-    def validate_ingredients(
-        self,
-        value: list[OrderedDict],
-    ) -> list[OrderedDict]:
-        if not value:
+    def validate(self, attrs: OrderedDict) -> OrderedDict:
+        recipe_ingredients = attrs.get('ingredientinrecipe')
+        if not recipe_ingredients:
             raise serializers.ValidationError(
-                'The "ingredients" field must be filled in when the recipe is '
-                'created.'
+                'The "ingredients" field must be present when the recipe is '
+                'updated.'
             )
 
         ingredients_ids = [
-            recipeingredient['ingredient'].pk for recipeingredient in value
+            recipe_ingredient['ingredient'].pk
+            for recipe_ingredient in recipe_ingredients
         ]
-        if len(value) > len(set(ingredients_ids)):
+        if len(recipe_ingredients) > len(set(ingredients_ids)):
             raise serializers.ValidationError(
                 'Repeating ingredients in the same recipe is unacceptable.'
             )
@@ -201,35 +192,16 @@ class RecipeSerializer(RecipeMinifiedSerializer):
             raise serializers.ValidationError(
                 'The ingredient does not exists.'
             )
-        return value
 
-    def validate_tags(
-        self,
-        value: list[OrderedDict],
-    ) -> list[OrderedDict]:
-        if not value:
-            raise serializers.ValidationError(
-                'The "tags" field must be filled in when the recipe is '
-                'created.'
-            )
-
-        if len(value) > len(set([tag.pk for tag in value])):
-            raise serializers.ValidationError(
-                'Repeating tags in the same recipe is unacceptable.'
-            )
-
-        return value
-
-    def validate(self, attrs: OrderedDict) -> OrderedDict:
-        if not attrs.get('ingredientinrecipe'):
-            raise serializers.ValidationError(
-                'The "ingredients" field must be present when the recipe is '
-                'updated.'
-            )
-
-        if not attrs.get('tags'):
+        tags = attrs.get('tags')
+        if not tags:
             raise serializers.ValidationError(
                 'The "tags" field must be present when the recipe is updated.'
+            )
+
+        if len(tags) > len(set([tag.pk for tag in tags])):
+            raise serializers.ValidationError(
+                'Repeating tags in the same recipe is unacceptable.'
             )
         return attrs
 
