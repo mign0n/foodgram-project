@@ -151,7 +151,7 @@ class FavoriteViewSet(
         return get_object_or_404(Recipe, pk=self.kwargs.get('recipe_id'))
 
     def get_queryset(self) -> QuerySet:
-        return self._recipe.favorite.all()
+        return self._recipe.favorite.filter(author=self.request.user).all()
 
     def get_serializer_context(self):
         serializer_context = super().get_serializer_context()
@@ -170,7 +170,7 @@ class FavoriteViewSet(
         *args: tuple,
         **kwargs: dict,
     ) -> Response:
-        if not self.get_queryset().filter(author=self.request.user).exists():
+        if not self.get_queryset().exists():
             raise ValidationError('The object is not exists.')
         return super().destroy(request, *args, **kwargs)
 
@@ -179,4 +179,4 @@ class CartViewSet(FavoriteViewSet):
     serializer_class = serializers.CartSerializer
 
     def get_queryset(self) -> QuerySet:
-        return self._recipe.cart.all()
+        return self._recipe.cart.filter(author=self.request.user).all()
