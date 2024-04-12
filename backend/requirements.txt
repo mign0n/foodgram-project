@@ -51,7 +51,7 @@ drf-spectacular-sidecar==2023.10.1
     # via drf-spectacular
 gunicorn==21.2.0
     # via foodgram (backend/pyproject.toml)
-idna==3.4
+idna==3.7
     # via requests
 inflection==0.5.1
     # via drf-spectacular
