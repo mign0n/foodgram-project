@@ -80,7 +80,7 @@ flake8==6.0.0
     #   foodgram (backend/pyproject.toml)
 flake8-pyproject==1.2.3
     # via foodgram (backend/pyproject.toml)
-gunicorn==21.2.0
+gunicorn==22.0.0
     # via foodgram (backend/pyproject.toml)
 idna==3.4
     # via requests
