@@ -97,7 +97,7 @@ rpds-py==0.10.4
     # via
     #   jsonschema
     #   referencing
-social-auth-app-django==5.2.0
+social-auth-app-django==5.4.1
     # via djoser
 social-auth-core==4.4.2
     # via social-auth-app-django
