@@ -55,7 +55,7 @@ django-templated-mail==1.1.1
     # via djoser
 django-testdata==1.0.3
     # via foodgram (backend/pyproject.toml)
-djangorestframework==3.14.0
+djangorestframework==3.15.2
     # via
     #   djangorestframework-simplejwt
     #   drf-spectacular
